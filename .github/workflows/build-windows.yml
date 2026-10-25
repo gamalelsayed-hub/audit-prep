@@ -1,0 +1,51 @@
+name: Build Windows app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-windows
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Read version
+        id: v
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AuditPrep-${{ steps.v.outputs.version }}
+          path: dist/*.exe
+      - name: Replace an existing release of this version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete "v${{ steps.v.outputs.version }}" --cleanup-tag --yes || true
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.version }}
+          name: AuditPrep ${{ steps.v.outputs.version }}
+          make_latest: true
+          files: dist/*.exe
+          body: |
+            - **AuditPrep-Setup**: ملف التثبيت (يعمل أيقونة على سطح المكتب).
+            - **AuditPrep-Portable**: نسخة تشتغل مباشرة بدون تثبيت.

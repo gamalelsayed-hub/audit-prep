@@ -1,0 +1,1926 @@
+<title>ملف المراجعة المسبق</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ledger workbench. Sticky header with tabs, one working surface below; tables and request cards carry the weight. */
+:root{
+  --paper:#f5f6f3; --sheet:#ffffff; --ink:#1d2a2b; --muted:#5e6b6a; --rule:#dfe3de; --rule-strong:#c5ccc6;
+  --accent:#1e5f5b; --accent-soft:#e3efec; --accent-ink:#ffffff;
+  --warn:#9a5b00; --warn-soft:#fbf0dc; --crit:#a3302a; --crit-soft:#f8e3e1; --ok:#2f6b3a; --ok-soft:#e3f1e5;
+  --info:#3b5487; --info-soft:#e6ebf6; --mute-soft:#eceeeb;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121918; --sheet:#1a2322; --ink:#e4ebe8; --muted:#9aa8a5; --rule:#2b3735; --rule-strong:#3a4946;
+  --accent:#6cbcb3; --accent-soft:#1f3532; --accent-ink:#0d1716;
+  --warn:#e8b25c; --warn-soft:#3a2d16; --crit:#f08a80; --crit-soft:#3d1e1b; --ok:#86c991; --ok-soft:#1d3322;
+  --info:#9db4e8; --info-soft:#1f2a42; --mute-soft:#25302e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121918; --sheet:#1a2322; --ink:#e4ebe8; --muted:#9aa8a5; --rule:#2b3735; --rule-strong:#3a4946;
+  --accent:#6cbcb3; --accent-soft:#1f3532; --accent-ink:#0d1716;
+  --warn:#e8b25c; --warn-soft:#3a2d16; --crit:#f08a80; --crit-soft:#3d1e1b; --ok:#86c991; --ok-soft:#1d3322;
+  --info:#9db4e8; --info-soft:#1f2a42; --mute-soft:#25302e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--sheet)}
+a{color:var(--accent)}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1280px;margin:0 auto}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sheet);border-bottom:1px solid var(--rule)}
+.hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-block:12px 0}
+.brand{display:flex;flex-direction:column;min-width:0}
+.brand h1{font-family:var(--f-display);font-size:22px;margin:0;line-height:1.2;color:var(--accent)}
+.brand span{font-size:12px;color:var(--muted)}
+.meta{margin-inline-start:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+nav{display:flex;gap:2px;overflow-x:auto;padding-top:10px;scrollbar-width:thin}
+nav button{font:inherit;font-weight:500;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:8px 12px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav button:disabled{cursor:default;opacity:.55}
+nav button small{font-size:10px;background:var(--rule);color:var(--muted);border-radius:4px;padding:0 5px;margin-inline-start:4px}
+nav button .cnt{font-size:11px;background:var(--accent-soft);color:var(--accent);border-radius:9px;padding:0 6px;margin-inline-start:4px}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:20px 56px;display:flex;flex-direction:column;gap:18px}
+h2{font-family:var(--f-display);font-size:19px;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.btn{font:inherit;font-weight:500;border:1px solid var(--rule-strong);background:var(--sheet);color:var(--ink);padding:7px 14px;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--crit);border-color:var(--crit)}
+.btn.sm{padding:3px 10px;font-size:13px}
+.btn.link{border:0;background:none;color:var(--accent);padding:2px 4px}
+.btn:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=number],input[type=date],select,textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--rule-strong);border-radius:6px;padding:6px 8px;min-width:0;max-width:100%}
+input[type=number]{width:120px;font-family:var(--f-num)}
+textarea{width:100%;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+label.f input[type=text]{min-width:200px}
+.banner{font-size:13px;background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:8px 12px}
+.sample{font-size:12px;background:var(--warn-soft);color:var(--warn);border-radius:4px;padding:2px 8px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;border-inline-start-width:4px}
+.tile .k{font-size:12px;color:var(--muted)}
+.tile .v{font-family:var(--f-num);font-size:22px;font-variant-numeric:tabular-nums}
+.tile.bad{border-inline-start-color:var(--crit)} .tile.good{border-inline-start-color:var(--ok)} .tile.mid{border-inline-start-color:var(--warn)}
+.bar{height:8px;border-radius:4px;background:var(--mute-soft);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.tbl{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--sheet);max-height:70vh}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--rule);text-align:start;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px;background:var(--paper);position:sticky;top:0;white-space:nowrap;z-index:1}
+td.n,th.n{text-align:left;direction:ltr;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.n{font-family:var(--f-num)}
+td.code{font-family:var(--f-num);color:var(--muted);white-space:nowrap}
+tr.tot td{font-weight:700;background:var(--paper)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:11px;font-weight:600;border-radius:4px;padding:1px 7px;white-space:nowrap}
+.c-crit{background:var(--crit-soft);color:var(--crit)} .c-warn{background:var(--warn-soft);color:var(--warn)}
+.c-info{background:var(--info-soft);color:var(--info)} .c-ok{background:var(--ok-soft);color:var(--ok)} .c-mute{background:var(--mute-soft);color:var(--muted)}
+.up{color:var(--ok)} .down{color:var(--crit)}
+textarea.ex{min-width:180px;min-height:34px;font-size:13px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:6px;z-index:20;font-size:13px;max-width:90vw}
+.drop{border:2px dashed var(--rule-strong);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.seg{display:inline-flex;border:1px solid var(--rule-strong);border-radius:6px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:inherit;border:0;background:var(--sheet);color:var(--ink);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+/* request cards */
+.reqs{display:flex;flex-direction:column;gap:8px}
+.req{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;border-inline-start:4px solid var(--rule-strong)}
+.req.s-doing{border-inline-start-color:var(--warn)} .req.s-ready{border-inline-start-color:var(--info)} .req.s-sent{border-inline-start-color:var(--ok)} .req.s-na{opacity:.7}
+.req-h{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 14px;cursor:pointer}
+.rn{font-family:var(--f-num);font-size:18px;color:var(--accent);line-height:1.3}
+.rt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rt b{font-weight:600}
+.rs{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.req-b{border-top:1px solid var(--rule);padding:14px;display:flex;flex-direction:column;gap:12px}
+.rtext{white-space:pre-wrap;background:var(--paper);border-radius:6px;padding:10px 12px;font-size:13px}
+.files{display:flex;flex-direction:column;gap:0;border:1px solid var(--rule);border-radius:6px}
+.file{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--rule)}
+.file:last-child{border-bottom:0}
+.file .nm{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.file .sz{font-family:var(--f-num);font-size:12px;color:var(--muted)}
+.upl{position:relative;overflow:hidden}
+.upl input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.letters{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.letters{grid-template-columns:1fr}}
+.lt-list{display:flex;flex-direction:column;gap:2px}
+.lt-list button{font:inherit;text-align:start;background:none;border:0;border-radius:6px;padding:8px 10px;color:var(--ink);cursor:pointer}
+.lt-list button[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.preview{white-space:pre-wrap;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:20px 24px;font-size:14px;line-height:1.9}
+.ph{font-size:12px;font-family:var(--f-body);border:1px solid var(--rule-strong);background:var(--paper);color:var(--ink);border-radius:4px;padding:1px 6px;cursor:pointer}
+@media (max-width:560px){.req-h{grid-template-columns:30px minmax(0,1fr)}.rs{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="hd">
+      <div class="brand"><h1>ملف المراجعة المسبق</h1><span id="sub">تجهيز متطلبات المراجع الخارجي قبل استلام الميزان</span></div>
+      <div class="meta"><span class="sample" id="sampleTag" hidden>ميزان تجريبي</span><button class="btn sm" id="exportBtn" hidden>تصدير إكسيل</button></div>
+    </div>
+    <nav role="tablist" id="tabs"></nav>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+// ---------- helpers ----------
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm = s => String(s??"").replace(/[ً-ْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ").toLowerCase().trim();
+function num(v){
+  if (v==null || v==="") return 0;
+  if (typeof v === "number") return v;
+  let s = String(v).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/٫/g,".").replace(/[٬,\s]/g,"");
+  let neg = false;
+  if (/^\(.*\)$/.test(s)){ neg = true; s = s.slice(1,-1); }
+  if (/-$/.test(s)){ neg = true; s = s.slice(0,-1); }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : (neg ? -n : n);
+}
+const isNum = v => typeof v==="number" || (typeof v==="string" && /^\(?-?[\d٠-٩,٬.\s]+\)?-?$/.test(v.trim()) && v.trim()!=="");
+const fmtN = new Intl.NumberFormat("en-US",{maximumFractionDigits:0});
+const fmt = v => { const r = Math.round(v); if (r===0) return "-"; return r<0 ? "("+fmtN.format(-r)+")" : fmtN.format(r); };
+const pctTxt = p => p==null ? "" : (p>0?"+":"") + (Math.abs(p)>=10 ? Math.round(p) : p.toFixed(1)) + "%";
+const fsize = b => b>1048576 ? (b/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(b/1024))+" KB";
+const today = () => new Date().toISOString().slice(0,10);
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3200); }
+const LS = { get(k,d){ try{const v=localStorage.getItem("aprep:"+k); return v==null?d:JSON.parse(v);}catch(e){return d;} }, set(k,v){ try{localStorage.setItem("aprep:"+k,JSON.stringify(v));}catch(e){} } };
+
+// ---------- defaults ----------
+const DEFAULT_RULES = [
+  {group:"عملاء دفعات مقدمة", kw:"عملاء دفعات مقدمه|دفعات مقدمه من العملاء|دفعات مقدمه عملاء", ex:"", side:"C", target:"العملاء (ذمم مدينة)"},
+  {group:"دفعات مقدمة للموردين", kw:"دفعات مقدمه موردين|دفعات مقدمه للموردين|موردين دفعات مقدمه", ex:"", side:"D", target:"الموردون (ذمم دائنة)"},
+  {group:"العملاء", kw:"عملاء|عميل|ذمم مدينه|عهده مبيعات", ex:"دفعات مقدمه|مخصص|مشكوك", side:"D", target:"دفعات مقدمة من العملاء (التزامات متداولة)"},
+  {group:"الموردون", kw:"موردين|موردون|مورد|ذمم دائنه|مقاولين", ex:"دفعات مقدمه|وسيط", side:"C", target:"دفعات مقدمة للموردين (أصول متداولة)"},
+  {group:"البنوك", kw:"نقد لدي البنوك|بنك|بنوك|مصرف", ex:"مصروف|مصاريف|عمولات|فوائد|ايراد|قرض|قروض|تسهيلات|مرابح|اعتماد|ضمان|وسيط|تاجير|التزامات", side:"D", target:"بنوك دائنة / سحب على المكشوف (التزامات متداولة)"},
+  {group:"النقدية بالصندوق", kw:"صندوق|خزينه|نقد بالصندوق", ex:"", side:"D", target:"صندوق برصيد دائن: يحتاج تسوية قبل الإقفال"},
+  {group:"مصروفات مدفوعة مقدمًا", kw:"مدفوعه مقدما|مصاريف مقدمه|مصروفات مقدمه", ex:"", side:"D", target:"مصروفات مستحقة (التزامات متداولة)"},
+  {group:"المصروفات المستحقة", kw:"مستحقه|مستحقات", ex:"ضريبه|زكاه|احكام", side:"C", target:"مصروفات مدفوعة مقدمًا (أصول متداولة)"},
+  {group:"سلف وعهد الموظفين", kw:"سلف|عهد", ex:"عهده مبيعات", side:"D", target:"مستحقات الموظفين (التزامات متداولة)"},
+  {group:"جاري الملاك", kw:"جاري الملاك|جاري الشركاء|جاري الشريك", ex:"", side:"C", target:"مستحق من الملاك (أصول متداولة) أو يُخصم من حقوق الملكية"},
+];
+const DEFAULT_SETTINGS = {
+  company:{name:"", cr:"", vat:"", address:"", auditor:"", auditorAddress:"", auditorEmail:"", fyEnd:"31 ديسمبر 2025م", signatory:"", signatoryTitle:"المدير العام"},
+  analysis:{priorLabel:"2024", currentLabel:"2025", pct:20, amount:50000, skipParents:true, plPrefixes:"4,5"},
+  rules: DEFAULT_RULES
+};
+const ST_LABEL = {todo:"لم يبدأ", doing:"جاري التجهيز", ready:"جاهز", sent:"تم التسليم", na:"لا ينطبق"};
+const ST_CLASS = {todo:"c-mute", doing:"c-warn", ready:"c-info", sent:"c-ok", na:"c-mute"};
+const CATS = {system:"يُستخرج من النظام", report:"تقرير أو تحليل يُعد", official:"مستند رسمي", external:"من جهة خارجية", form:"نموذج يُعبأ"};
+
+const PH = ["الشركة","السجل_التجاري","الرقم_الضريبي","العنوان","المراجع","عنوان_المراجع","بريد_المراجع","نهاية_السنة","التاريخ","المفوض","صفة_المفوض","الطرف","المبلغ","طبيعة_الرصيد","رقم_الحساب"];
+const REPLY_BLOCK = `
+---------------------------------------------
+**الرد (يُعبأ من قبل {الطرف} ويُرسل مباشرة إلى المراجع)**
+السادة / {المراجع}
+عنوان المراجع: {عنوان_المراجع}   البريد: {بريد_المراجع}
+☐ نؤكد صحة الرصيد المذكور أعلاه كما في {نهاية_السنة}.
+☐ الرصيد غير صحيح، والرصيد حسب سجلاتنا هو: ................ ريال (مدين / دائن)
+والفرق للأسباب التالية: ...............................................................
+الاسم: ....................   التوقيع: ....................   الختم: ....................   التاريخ: ..........`;
+const DEFAULT_LETTERS = [
+  {id:"conf-customer", title:"مصادقة رصيد عميل", group:"العملاء", body:
+`التاريخ: {التاريخ}
+السادة / {الطرف}                                         المحترمين
+السلام عليكم ورحمة الله وبركاته،،،
+
+**الموضوع: مصادقة رصيد حسابكم كما في {نهاية_السنة}**
+
+يقوم مراجع حساباتنا السادة / {المراجع} بمراجعة القوائم المالية لشركتنا عن السنة المالية المنتهية في {نهاية_السنة}، ولغرض التحقق من صحة الأرصدة نرجو التكرم بتأكيد رصيد حسابكم لدينا والبالغ ({المبلغ}) ريال سعودي ({طبيعة_الرصيد}) كما في ذلك التاريخ، وإرسال الرد مباشرة إلى مراجع الحسابات على العنوان الموضح أدناه.
+
+وفي حال وجود اختلاف نرجو بيان أسبابه وإرفاق كشف حساب يوضح ذلك.
+هذا الطلب لغرض المصادقة فقط، وليس مطالبة بالسداد.
+
+وتقبلوا وافر التحية والتقدير،،،
+{الشركة}
+{المفوض} - {صفة_المفوض}
+التوقيع والختم: ....................
+` + REPLY_BLOCK},
+  {id:"conf-supplier", title:"مصادقة رصيد مورد", group:"الموردون", body:
+`التاريخ: {التاريخ}
+السادة / {الطرف}                                         المحترمين
+السلام عليكم ورحمة الله وبركاته،،،
+
+**الموضوع: مصادقة رصيد حسابنا لديكم كما في {نهاية_السنة}**
+
+يقوم مراجع حساباتنا السادة / {المراجع} بمراجعة القوائم المالية لشركتنا عن السنة المالية المنتهية في {نهاية_السنة}. تُظهر سجلاتنا أن رصيد حسابكم لدينا يبلغ ({المبلغ}) ريال سعودي ({طبيعة_الرصيد}) كما في ذلك التاريخ.
+
+نرجو التكرم بتأكيد هذا الرصيد أو بيان الرصيد الصحيح حسب سجلاتكم، مع إرفاق كشف حساب تفصيلي، وإرسال الرد مباشرة إلى مراجع الحسابات على العنوان الموضح أدناه.
+
+وتقبلوا وافر التحية والتقدير،،،
+{الشركة}
+{المفوض} - {صفة_المفوض}
+التوقيع والختم: ....................
+` + REPLY_BLOCK},
+  {id:"conf-partner", title:"مصادقة رصيد شريك", group:"جاري الملاك", body:
+`التاريخ: {التاريخ}
+السيد / {الطرف}                                         المحترم
+السلام عليكم ورحمة الله وبركاته،،،
+
+**الموضوع: مصادقة رصيد الحساب الجاري كما في {نهاية_السنة}**
+
+يقوم مراجع حسابات الشركة السادة / {المراجع} بمراجعة القوائم المالية للسنة المالية المنتهية في {نهاية_السنة}. يظهر رصيد حسابكم الجاري في سجلات الشركة بمبلغ ({المبلغ}) ريال سعودي ({طبيعة_الرصيد}) كما في ذلك التاريخ.
+
+نرجو التكرم بتأكيد الرصيد أو بيان أي اختلاف وأسبابه، وإرسال الرد مباشرة إلى مراجع الحسابات.
+
+وتقبلوا وافر التحية والتقدير،،،
+{الشركة}
+{المفوض} - {صفة_المفوض}
+` + REPLY_BLOCK},
+  {id:"bank-conf", title:"طلب مصادقة بنكية", group:"", body:
+`التاريخ: {التاريخ}
+السادة / {الطرف}                                         المحترمين
+السلام عليكم ورحمة الله وبركاته،،،
+
+**الموضوع: طلب مصادقة بنكية كما في {نهاية_السنة}**
+
+نفيدكم بأن السادة / {المراجع} يقومون بمراجعة القوائم المالية لشركتنا {الشركة} (سجل تجاري رقم {السجل_التجاري}) عن السنة المالية المنتهية في {نهاية_السنة}.
+ونفوضكم بتزويدهم مباشرة بالمعلومات التالية عن جميع تعاملاتنا لديكم كما في ذلك التاريخ:
+1. أرصدة جميع الحسابات الجارية والودائع وحسابات الاستثمار، مع أرقامها وعملاتها.
+2. القروض والتسهيلات والمرابحات القائمة: الحدود والأرصدة المستخدمة وتواريخ الاستحقاق وأسعار العائد والضمانات المقدمة.
+3. خطابات الضمان والاعتمادات المستندية القائمة وقيمها وتواريخ انتهائها والتأمينات النقدية المحتجزة عنها.
+4. أي رهونات أو أوراق تجارية أو سندات لأمر أو التزامات محتملة أخرى.
+5. أسماء المفوضين بالتوقيع وحدود صلاحياتهم.
+
+ونفوضكم بخصم رسوم المصادقة من حسابنا رقم ({رقم_الحساب}).
+نرجو إرسال الرد مباشرة إلى المراجع على العنوان: {عنوان_المراجع} - البريد: {بريد_المراجع}
+
+وتقبلوا وافر التحية والتقدير،،،
+{الشركة}
+{المفوض} - {صفة_المفوض}
+التوقيع والختم: ....................`},
+  {id:"auth-auditor", title:"تفويض مكتب المراجعة", group:"", body:
+`التاريخ: {التاريخ}
+
+**تفويض**
+
+نفوض نحن {الشركة} (سجل تجاري رقم {السجل_التجاري}، الرقم الضريبي {الرقم_الضريبي})، السادة / {المراجع}، بالتواصل مع الجهات التالية والحصول منها على المعلومات والمصادقات والمستندات اللازمة لأغراض مراجعة القوائم المالية للسنة المالية المنتهية في {نهاية_السنة}:
+- البنوك وشركات التمويل التي نتعامل معها.
+- العملاء والموردون والأطراف ذات العلاقة.
+- هيئة الزكاة والضريبة والجمارك.
+- المؤسسة العامة للتأمينات الاجتماعية.
+- أي جهة أخرى يرى المراجع ضرورة التواصل معها لأغراض المراجعة.
+
+ويسري هذا التفويض حتى انتهاء أعمال المراجعة.
+
+{الشركة}
+{المفوض} - {صفة_المفوض}
+التوقيع والختم: ....................`},
+  {id:"mgmt-rep", title:"خطاب إقرار الإدارة", group:"", body:
+`التاريخ: {التاريخ}
+السادة / {المراجع}                                         المحترمين
+
+**الموضوع: خطاب إقرار الإدارة عن القوائم المالية للسنة المنتهية في {نهاية_السنة}**
+
+نقدم هذا الخطاب فيما يتعلق بمراجعتكم للقوائم المالية لشركة {الشركة} للسنة المالية المنتهية في {نهاية_السنة}، ونقر حسب علمنا واعتقادنا بما يلي:
+1. أننا مسؤولون عن إعداد القوائم المالية وعرضها بشكل عادل وفقًا للمعايير الدولية للتقرير المالي المعتمدة في المملكة العربية السعودية.
+2. أننا وفرنا لكم جميع السجلات المحاسبية والمستندات المؤيدة ومحاضر اجتماعات الشركاء، وإمكانية الوصول غير المقيد إلى الأشخاص داخل المنشأة.
+3. أن جميع المعاملات قد سُجلت في السجلات المحاسبية وانعكست في القوائم المالية.
+4. أننا أفصحنا لكم عن جميع المعاملات والأرصدة مع الأطراف ذات العلاقة.
+5. أننا أفصحنا لكم عن أي حالات غش أو اشتباه بغش، وعن أي مخالفات للأنظمة واللوائح نعلمها.
+6. أنه لا توجد التزامات محتملة أو دعاوى قضائية أو ارتباطات رأسمالية لم يُفصح عنها.
+7. أن الأصول المملوكة للشركة خالية من أي رهونات أو قيود غير مفصح عنها.
+8. أن الأحداث اللاحقة لتاريخ القوائم المالية التي تتطلب تعديلًا أو إفصاحًا قد تمت معالجتها.
+9. أن مخصصات الزكاة والديون المشكوك في تحصيلها والمخزون الراكد ومكافأة نهاية الخدمة كافية ومحسوبة على أسس معقولة.
+
+{الشركة}
+{المفوض} - {صفة_المفوض}
+التوقيع والختم: ....................`},
+];
+
+// ---------- sample TB (illustrative only) ----------
+function sampleTB(){
+  const r = [
+    ["1101","الصندوق الرئيسي",45200,38900],["1102","بنك الراجحي - حساب جاري",1250000,2840500],["1103","البنك الأهلي - حساب جاري",320000,-85400],
+    ["1201","عملاء - شركة النور للتجارة",410000,455000],["1202","عملاء - مؤسسة الريان",185000,-62000],["1203","عملاء - شركة الأفق",0,230000],
+    ["1204","عملاء - مؤسسة السلام",-15000,-28500],["1301","المخزون - مواد خام",920000,1010000],["1302","المخزون - بضاعة تامة الصنع",640000,380000],
+    ["1401","مصروفات مدفوعة مقدما - إيجار",60000,72000],["1402","سلف وعهد الموظفين",22000,18500],["1501","الأراضي",1500000,1500000],
+    ["1502","المباني",2200000,2200000],["1503","الآلات والمعدات",870000,1240000],["1509","مجمع الإهلاك",-1180000,-1402000],
+    ["2101","موردين - شركة المدار للتوريدات",-380000,-415000],["2102","موردين - مصنع الخليج",-210000,48000],["2201","مصروفات مستحقة",-48000,-61000],
+    ["2301","ضريبة القيمة المضافة",-38000,-44500],["2401","قروض قصيرة الأجل",-600000,-250000],["2501","مخصص مكافأة نهاية الخدمة",-340000,-372000],
+    ["3101","رأس المال",-5000000,-5000000],["3301","أرباح مبقاة",0,0],["4101","إيرادات المبيعات",-7850000,-8920000],["4201","إيرادات أخرى",-45000,-190000],
+    ["5101","تكلفة المبيعات",5620000,6310000],["6101","رواتب وأجور",980000,1045000],["6102","إيجارات",240000,288000],["6103","مصروفات صيانة",65000,148000],
+    ["6104","مصروف الإهلاك",205000,222000],["6106","مصروفات تسويق",130000,95000],
+  ].map(([gl,name,prior,current]) => ({key:gl, gl, sub:"", name, prior, current, mdr:0, mcr:0}));
+  const re = r.find(a=>a.gl==="3301");
+  re.prior = -r.reduce((s,a)=>s+a.prior,0); re.current = -r.reduce((s,a)=>s+a.current,0);
+  const glNames = {}; r.forEach(a=>glNames[a.gl]=a.name);
+  return {meta:{mode:"two", sample:true, glNames}, rows:r};
+}
+
+// ---------- state ----------
+const S = {
+  view: LS.get("view","summary"),
+  db:null, assets:null, downloads:null, capsReady:false,
+  settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
+  notes:{}, requests:[], docs:[], letters:{},
+  loaded:{requests:false, docs:false},
+  tb: sampleTB(), tbLoadedAt:null,
+  ui:{level:"gl", q:"", flagged:false, reclassYear:"current", reqFilter:"all", open:null, openDoc:null, edit:null, letter:"conf-customer",
+      lf:{party:"", amount:"", side:"مدين", account:"", date:""}, cov:70, uploading:{}, confirm:null, imp:{mode:"single", src:{}},
+      fsView:"bs", editPrior:false, mapLevel:"gl", mapQ:"", mapHow:"all", mapLine:"", mapEdit:null, polOpen:null, adj:null},
+  fs:{overrides:{}, adj:[], prior:null, rates:{}, faDocs:{}, policies:{}},
+};
+const blankAdj = () => ({desc:"", type:"adj", lines:[{sub:"",dr:"",cr:""},{sub:"",dr:"",cr:""}]});
+S.ui.adj = blankAdj();
+const A = () => S.settings.analysis;
+const C = () => S.settings.company;
+
+// ---------- persistence ----------
+const queues = {};
+function dbErr(e){
+  const c = e && e.code;
+  if (c==="quota_exceeded") toast("المساحة المتاحة للحفظ امتلأت. احذف ملفات أو بيانات قديمة.");
+  else if (c==="invalid_argument") toast("تعذر الحفظ: لا تملك صلاحية التعديل أو البيانات أكبر من المسموح.");
+  else toast("تعذر الحفظ الآن. حاول مرة أخرى.");
+}
+function save(path, data){
+  if (!S.db) return Promise.resolve();
+  const q = (queues[path]||Promise.resolve()).then(() => S.db.doc(path).set(data)).catch(dbErr);
+  queues[path] = q; return q;
+}
+function del(path){ if (!S.db) return Promise.resolve(); return S.db.doc(path).delete().catch(dbErr); }
+let settingsTimer = null;
+function saveSettings(){ clearTimeout(settingsTimer); settingsTimer = setTimeout(()=>save("app/settings", S.settings), 500); if(!S.db) LS.set("settings", S.settings); }
+function saveNotes(){ save("app/notes", {map:S.notes}); if(!S.db) LS.set("notes", S.notes); }
+function saveReq(r){ const {id, ...body} = r; body.updatedAt = new Date().toISOString(); return save("requests/"+id, body); }
+function saveDoc(d){ const {id, ...body} = d; body.updatedAt = new Date().toISOString(); return save("docs/"+id, body); }
+
+let pendingRender = false;
+function softRender(){
+  const ae = document.activeElement;
+  if (ae && $("#app").contains(ae) && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)){ pendingRender = true; return; }
+  render();
+}
+document.addEventListener("focusout", () => { if (pendingRender){ pendingRender = false; setTimeout(()=>{ if(!pendingRender) render(); },0); } });
+
+async function initCaps(){
+  const use = n => (window.claude && window.claude.use) ? window.claude.use(n).catch(()=>null) : Promise.resolve(null);
+  const [db, assets, downloads] = await Promise.all([use("db"), use("assets"), use("downloads")]);
+  S.db = db; S.assets = assets; S.downloads = downloads; S.capsReady = true;
+  if (window.claude && window.claude.local){ S.local = window.claude.local; try{ S.local.dir = await S.local.getDir(); }catch(_){} }
+  $("#exportBtn").hidden = !downloads || typeof XLSX==="undefined";
+  if (!db){
+    S.settings = Object.assign(S.settings, LS.get("settings", {}));
+    S.notes = LS.get("notes", {});
+    S.loaded.requests = S.loaded.docs = true;
+    render(); return;
+  }
+  db.doc("app/settings").onSnapshot(s => { if (s.exists){ const d = s.data(); S.settings = {company:{...DEFAULT_SETTINGS.company, ...(d.company||{})}, analysis:{...DEFAULT_SETTINGS.analysis, ...(d.analysis||{})}, rules: d.rules || DEFAULT_RULES}; softRender(); } }, ()=>{});
+  db.doc("app/notes").onSnapshot(s => { if (s.exists){ S.notes = {...(s.data().map||{})}; softRender(); } }, ()=>{});
+  db.collection("requests").onSnapshot(q => { S.requests = q.docs.map(d => ({id:d.id, ...JSON.parse(JSON.stringify(d.data()))})); S.loaded.requests = true; softRender(); }, ()=>{ S.loaded.requests = true; softRender(); });
+  db.collection("docs").onSnapshot(q => { S.docs = q.docs.map(d => ({id:d.id, ...JSON.parse(JSON.stringify(d.data()))})); S.loaded.docs = true; softRender(); }, ()=>{ S.loaded.docs = true; softRender(); });
+  db.collection("letters").onSnapshot(q => { const m = {}; q.docs.forEach(d => m[d.id] = {id:d.id, ...d.data()}); S.letters = m; softRender(); }, ()=>{});
+  db.doc("app/fsmap").onSnapshot(s => { S.fs.overrides = s.exists ? {...(s.data().overrides||{})} : {}; softRender(); }, ()=>{});
+  db.doc("app/fsprior").onSnapshot(s => { S.fs.prior = s.exists ? JSON.parse(JSON.stringify(s.data())) : null; softRender(); }, ()=>{});
+  db.doc("app/fa").onSnapshot(s => { S.fs.rates = s.exists ? {...(s.data().rates||{})} : {}; softRender(); }, ()=>{});
+  db.collection("adj").onSnapshot(q => { S.fs.adj = q.docs.map(d => ({id:d.id, ...JSON.parse(JSON.stringify(d.data()))})); softRender(); }, ()=>{});
+  db.collection("fa").onSnapshot(q => { const m = {}; q.docs.forEach(d => m[d.id.replace(/~/g,"/")] = {id:d.id.replace(/~/g,"/"), ...JSON.parse(JSON.stringify(d.data()))}); S.fs.faDocs = m; softRender(); }, ()=>{});
+  db.collection("policies").onSnapshot(q => { const m = {}; q.docs.forEach(d => m[d.id] = {id:d.id, ...d.data()}); S.fs.policies = m; softRender(); }, ()=>{});
+  db.doc("tb/meta").onSnapshot(async s => {
+    if (!s.exists) return;
+    const meta = s.data();
+    if (meta.importedAt === S.tbLoadedAt) return;
+    try{
+      const parts = await Promise.all(Array.from({length:meta.chunks}, (_,i) => db.doc("tb/c"+i).get()));
+      const rows = [];
+      parts.forEach(p => { if (p.exists) (p.data().rows||[]).forEach(r => rows.push({key:r[0]+(r[1]?"/"+r[1]:""), gl:r[0], sub:r[1], name:r[2], prior:r[3], current:r[4], mdr:r[5]||0, mcr:r[6]||0})); });
+      S.tb = {meta, rows}; S.tbLoadedAt = meta.importedAt; softRender();
+    }catch(e){ toast("تعذر تحميل الميزان المحفوظ."); }
+  }, ()=>{});
+}
+
+// ---------- analysis ----------
+const isPL = gl => A().plPrefixes.split(/[,،\s]+/).filter(Boolean).some(p => String(gl).startsWith(p));
+function ruleFor(text){
+  const n = norm(text);
+  for (const r of S.settings.rules){
+    const kws = norm(r.kw).split("|").map(s=>s.trim()).filter(Boolean);
+    const exs = norm(r.ex||"").split("|").map(s=>s.trim()).filter(Boolean);
+    if (kws.some(k=>n.includes(k)) && !exs.some(k=>n.includes(k))) return r;
+  }
+  return null;
+}
+const hasSubs = () => S.tb.rows.some(r => r.sub);
+function glRows(){
+  const tb = S.tb, names = tb.meta.glNames || {};
+  if (!hasSubs()){
+    const codes = tb.rows.map(r=>String(r.gl));
+    return tb.rows.map(r => ({...r, code:r.gl, name:r.name, parent: A().skipParents && codes.some(o => o!==r.gl && o.length>String(r.gl).length && o.startsWith(r.gl))})).filter(r=>!r.parent);
+  }
+  const m = new Map();
+  tb.rows.forEach(r => {
+    let g = m.get(r.gl);
+    if (!g){ g = {key:r.gl, code:r.gl, gl:r.gl, name:names[r.gl]||r.gl, prior:0, current:0, mdr:0, mcr:0, n:0}; m.set(r.gl, g); }
+    g.prior += r.prior; g.current += r.current; g.mdr += r.mdr; g.mcr += r.mcr; g.n++;
+  });
+  return [...m.values()];
+}
+function subRows(){
+  const names = S.tb.meta.glNames || {};
+  return S.tb.rows.map(r => ({...r, code: r.gl+(r.sub?" / "+r.sub:""), glName: names[r.gl]||""}));
+}
+function leafRows(){ return hasSubs() ? subRows() : glRows().map(r => ({...r, glName:""})); }
+function flagRows(rows){
+  const a = A(), single = S.tb.meta.mode === "single";
+  rows.forEach(r => {
+    r.diff = r.current - r.prior;
+    r.pct = r.prior ? (r.diff/Math.abs(r.prior))*100 : null;
+    const f = [];
+    const pl = isPL(r.gl);
+    if (!(single && pl)){
+      if (r.prior===0 && r.current!==0 && Math.abs(r.current)>=a.amount) f.push({t:"new", c:"c-info", l:"حساب جديد"});
+      else if (r.current===0 && r.prior!==0 && Math.abs(r.prior)>=a.amount) f.push({t:"closed", c:"c-info", l:"رصيده صفر هذا العام"});
+      else if (r.pct!=null && Math.abs(r.diff)>=a.amount && Math.abs(r.pct)>=a.pct){
+        f.push({t:"jump", c: Math.abs(r.pct)>=a.pct*2.5?"c-crit":"c-warn", l:(Math.abs(r.current)>Math.abs(r.prior)?"زيادة":"انخفاض")+" غير طبيعي "+pctTxt(r.pct)});
+      }
+      if (r.prior && r.current && Math.sign(r.prior)!==Math.sign(r.current) && Math.abs(r.current)>=1) f.push({t:"flip", c:"c-crit", l:"انعكست طبيعة الرصيد"});
+    }
+    const rule = ruleFor((r.glName||"")+" "+r.name);
+    r.rule = rule;
+    if (rule && Math.abs(r.current)>=1 && (rule.side==="D" ? r.current<0 : r.current>0)) f.push({t:"contra", c:"c-warn", l:"رصيد معاكس: يعاد تبويبه"});
+    r.flags = f;
+  });
+  return rows;
+}
+function tbSums(){ const rows = S.tb.rows; return {prior: rows.reduce((s,r)=>s+r.prior,0), current: rows.reduce((s,r)=>s+r.current,0)}; }
+function reclassData(year){
+  const k = year==="prior" ? "prior" : "current";
+  const groups = S.settings.rules.map(r => ({rule:r, normal:0, contra:0, items:[]}));
+  leafRows().forEach(a => {
+    const rule = ruleFor((a.glName||"")+" "+a.name); if (!rule) return;
+    const g = groups[S.settings.rules.indexOf(rule)], v = a[k];
+    if (Math.abs(v)<0.005) return;
+    if (rule.side==="D" ? v<0 : v>0){ g.contra += v; g.items.push(a); } else g.normal += v;
+  });
+  return groups.filter(g => g.items.length || g.normal);
+}
+function docStatus(d){
+  if (!d.expiry) return {c:"c-mute", l:"بدون تاريخ انتهاء", days:null};
+  const days = Math.round((new Date(d.expiry) - new Date(today()))/86400000);
+  if (days < 0) return {c:"c-crit", l:"منتهي منذ "+(-days)+" يوم", days};
+  if (days <= 60) return {c:"c-warn", l:"ينتهي خلال "+days+" يوم", days};
+  return {c:"c-ok", l:"ساري حتى "+d.expiry, days};
+}
+
+// ---------- financial statements model ----------
+// Sub-lines are what accounts map to; statement lines group sub-lines and carry the note number.
+const FS_LINES = [
+  // statement of financial position
+  {id:"cash", sec:"ca", t:"نقد وأرصدة لدى البنوك", note:"5", subs:[["bank","نقد لدى البنوك"],["cashbox","نقد في الصندوق"]]},
+  {id:"ar", sec:"ca", t:"ذمم مدينة تجارية", note:"6", subs:[["ar_gross","مدينون تجاريون"],["ecl","مخصص ديون مشكوك في تحصيلها"]]},
+  {id:"orec", sec:"ca", t:"ذمم مدينة وموجودات متداولة أخرى", note:"7", subs:[["prepaid","مصاريف مدفوعة مقدمًا"],["bankguar","ضمانات بنكية"],["supadv","موردون ومقاولون مدينون"],["lcguar","ضمانات اعتمادات مستندية"],["emp","ذمم وعهد موظفين"],["wip","أعمال تحت التنفيذ"],["otherrec","أرصدة مدينة أخرى"]]},
+  {id:"rpdr", sec:"ca", t:"مستحق على أطراف ذات علاقة", note:"8/أ", subs:[["rpdr","مستحق على أطراف ذات علاقة"]]},
+  {id:"inv", sec:"ca", t:"مخزون", note:"9", subs:[["inv_gross","بضاعة"],["invprov","مخصص بضاعة متقادمة وبطيئة الحركة"]]},
+  {id:"ppe", sec:"nca", t:"ممتلكات، آلات ومعدات", note:"10", subs:[["ppe_cost","التكلفة"],["ppe_dep","مجمع الاستهلاك"]]},
+  {id:"stfin", sec:"cl", t:"تسهيلات ومرابحات بنكية قصيرة الأجل", note:"11", subs:[["stloan","مرابحات بنكية قصيرة الأجل"],["ltcur","مرابحات بنكية طويلة الأجل - الجزء المتداول"],["stdefint","فوائد تمويلية مؤجلة"]]},
+  {id:"ap", sec:"cl", t:"ذمم دائنة تجارية", note:"", subs:[["ap","ذمم دائنة تجارية"]]},
+  {id:"opay", sec:"cl", t:"ذمم دائنة أخرى ومستحقات", note:"12", subs:[["vat","ضريبة القيمة المضافة"],["accr","مصروفات مستحقة"],["otherpay","أرصدة دائنة أخرى"],["custadv","عملاء دفعات مقدمة"],["ppepay","دائنو ممتلكات، آلات ومعدات"]]},
+  {id:"rpcr", sec:"cl", t:"مستحق لأطراف ذات علاقة", note:"8/ب", subs:[["rpcr","مستحق لأطراف ذات علاقة"]]},
+  {id:"leasest", sec:"cl", t:"التزامات عن عقود إيجار رأسمالي قصيرة الأجل", note:"13", subs:[["leasest","التزامات الإيجار - خلال سنة"],["leasestint","تكاليف التمويل - المتداول"]]},
+  {id:"zakat", sec:"cl", t:"مخصص الزكاة", note:"14", subs:[["zakat","مخصص الزكاة"]]},
+  {id:"ltfin", sec:"ncl", t:"تسهيلات ومرابحات بنكية طويلة الأجل", note:"11", subs:[["ltloan","مرابحات بنكية طويلة الأجل"],["ltdefint","فوائد تمويلية مؤجلة"]]},
+  {id:"leaselt", sec:"ncl", t:"التزامات عن عقود إيجار رأسمالي طويلة الأجل", note:"13", subs:[["leaselt","التزامات الإيجار - أكثر من سنة"],["leaseltint","تكاليف التمويل - غير المتداول"]]},
+  {id:"eosb", sec:"ncl", t:"التزامات المنافع المحددة للموظفين", note:"15", subs:[["eosb","التزامات المنافع المحددة للموظفين"]]},
+  {id:"cap", sec:"eq", t:"رأس المال", note:"16", subs:[["cap","رأس المال"]]},
+  {id:"reserve", sec:"eq", t:"احتياطي نظامي", note:"", subs:[["reserve","احتياطي نظامي"]]},
+  {id:"re", sec:"eq", t:"أرباح مبقاة", note:"", subs:[["re","أرباح مبقاة"]]},
+  {id:"reval", sec:"eq", t:"فائض إعادة تقييم الممتلكات", note:"", subs:[["reval","فائض إعادة تقييم الممتلكات"]]},
+  // statement of comprehensive income
+  {id:"sales", sec:"rev", t:"صافي المبيعات", note:"", subs:[["sales","المبيعات"],["salesret","مردودات المبيعات"],["salesdisc","خصم مسموح به"]]},
+  {id:"cogs", sec:"cos", t:"تكلفة المبيعات", note:"", subs:[["cogs","تكلفة المبيعات"]]},
+  {id:"sell", sec:"opex", t:"مصروفات بيعية وتسويقية", note:"17", subs:[["s_sal","رواتب وأجور وما في حكمها"],["s_car","مصاريف سيارات ومحروقات"],["s_bonus","مكافآت وعمولات"],["s_ins","مصاريف تأمين"],["s_travel","تذاكر ومصاريف سفر وإجازات"],["s_fines","مخالفات وغرامات تأخير"],["s_cons","مواد مستهلكة"]]},
+  {id:"gna", sec:"opex", t:"مصروفات عمومية وإدارية", note:"18", subs:[["g_sal","رواتب وأجور وما في حكمها"],["g_freight","نقل وأجور تحميل"],["g_tel","هاتف وبريد وفاكس وإنترنت"],["g_gosi","تأمينات اجتماعية"],["g_elec","كهرباء ومياه"],["g_rent","الإيجارات"],["g_stat","قرطاسية ومطبوعات"],["g_fees","رسوم حكومية واشتراكات وتعقيب"],["g_eosb","التزامات المنافع المحددة للموظفين"],["g_prof","أتعاب مهنية"],["g_other","أخرى متنوعة"],["g_exh","تجهيزات ومصاريف معارض"],["g_bank","مصاريف بنكية"],["g_dep","استهلاك ممتلكات ومعدات"]]},
+  {id:"fin", sec:"other", t:"مصاريف تمويلية", note:"", subs:[["fin","مصاريف تمويلية"]]},
+  {id:"invest", sec:"other", t:"إيرادات استثمارات عقارية", note:"19", subs:[["inv_inc","إيرادات تأجير مستودعات"],["inv_cost","تكلفة تأجير مستودعات"]]},
+  {id:"othinc", sec:"other", t:"إيرادات ومصروفات أخرى", note:"20", subs:[["oth_exp","مصروفات أخرى"],["gain_ppe","أرباح استبعاد ممتلكات ومعدات"],["oth_inc","إيرادات أخرى"],["inv_diff","فروق تسوية المخزون"]]},
+  {id:"zakexp", sec:"zak", t:"الزكاة", note:"", subs:[["zakat_exp","الزكاة"]]},
+];
+const FS_SUB = {}; FS_LINES.forEach(l => l.subs.forEach(([id,t]) => FS_SUB[id] = {id, t, line:l.id}));
+const BS_SECS = ["ca","nca","cl","ncl","eq"];
+
+// Default mapping for the company's chart: [code prefix, sub-line when the analytic balance is debit, when credit, analytic-name keyword (optional)]
+// The longest matching prefix wins; a rule with a keyword wins over one without for analytics whose name contains it.
+const DEFAULT_MAP = [
+  ["11101","cashbox","cashbox"],["1110102","bank","bank"],["1110103","bank","bank"],
+  ["1130101","bankguar","bankguar"],
+  ["1140101","ar_gross","custadv"],["1140102","supadv","ap"],["11401","ar_gross","custadv"],
+  ["1140201","emp","otherpay"],["1140202","emp","otherpay"],["1140203","prepaid","accr"],["1140204","vat","vat"],["1140206","otherrec","otherpay"],
+  ["1140207","stdefint","stdefint"],["1140208","otherrec","otherpay"],["1140209","lcguar","lcguar"],["1140210","otherrec","otherpay"],
+  ["11501","inv_gross","inv_gross"],["11601","otherrec","otherpay"],
+  ["12","ppe_cost","ppe_cost"],["1211401","wip","wip"],
+  ["1510101","ltdefint","ltdefint"],["1510102","ltdefint","ltdefint"],["1510103","leasestint","leasestint"],
+  ["2110101","stloan","stloan"],["2110201","stloan","stloan"],["21201","ltcur","ltcur"],
+  ["21401","otherrec","accr"],["21402","prepaid","accr"],["21403","vat","vat"],
+  ["2150101","supadv","ap"],["2150102","supadv","ap"],["2150103","supadv","ap"],["21501","otherrec","otherpay"],
+  ["2150201","otherrec","otherpay"],["2150202","otherrec","otherpay"],["2150203","otherrec","otherpay"],
+  ["2150301","zakat","zakat"],["2150302","invprov","invprov"],["2150303","ecl","ecl"],
+  ["22101","ltloan","ltloan"],["22201","leasest","leasest"],["22301","eosb","eosb"],
+  ["3110101","cap","cap"],["3110102","rpdr","rpcr"],["3110103","re","re"],["3110104","reserve","reserve"],["3110105","reval","reval"],
+  ["41101","sales","sales"],["4110102","salesret","salesret"],["4110103","salesdisc","salesdisc"],
+  ["4120101","gain_ppe","gain_ppe"],["41201","oth_inc","oth_inc"],["4210101","inv_inc","inv_inc"],["4210102","inv_cost","inv_cost"],["4210201","oth_inc","oth_inc"],
+  ["511","cogs","cogs"],
+  ["5120101","g_sal","g_sal"],["5120102","g_sal","g_sal"],["5120105","g_sal","g_sal"],["5120111","g_sal","g_sal"],["5120112","g_eosb","g_eosb"],
+  ["5120201","g_rent","g_rent"],["5120202","g_elec","g_elec"],["5120204","g_bank","g_bank"],["5120205","g_bank","g_bank"],["5120206","g_bank","g_bank"],
+  ["5120207","s_car","s_car"],["5120208","s_bonus","s_bonus"],["5120209","s_car","s_car"],["5120210","g_tel","g_tel"],["5120211","g_other","g_other"],
+  ["5120212","g_stat","g_stat"],["5120213","g_prof","g_prof"],["5120214","g_freight","g_freight"],["5120215","g_fees","g_fees"],["5120216","s_fines","s_fines"],
+  ["5120217","s_travel","s_travel"],["5120218","g_other","g_other"],["5120219","g_bank","g_bank"],["51203","g_fees","g_fees"],["5120303","s_ins","s_ins"],
+  ["5120401","g_dep","g_dep"],["51205","g_sal","g_sal"],
+  ["5130101","s_sal","s_sal"],["5130102","s_sal","s_sal"],["5130105","s_travel","s_travel"],["5130106","s_sal","s_sal"],["5130111","s_sal","s_sal"],
+  ["5130112","s_bonus","s_bonus"],["5130113","g_eosb","g_eosb"],["5130201","s_cons","s_cons"],["5130202","s_cons","s_cons"],["5130203","s_bonus","s_bonus"],
+  ["5130206","s_car","s_car"],["5130207","s_cons","s_cons"],["51303","g_fees","g_fees"],["5130302","s_ins","s_ins"],
+  ["514","fin","fin"],
+  // analytic-name rules
+  ["51203","g_gosi","g_gosi","تأمينات اجتماعية"],["51303","g_gosi","g_gosi","تأمينات اجتماعية"],
+];
+// Fallback by first digit of the code when nothing above matches
+const FALLBACK_MAP = {"1":["otherrec","otherpay"],"2":["otherrec","otherpay"],"3":["re","re"],"4":["oth_inc","oth_inc"],"5":["g_other","g_other"],"6":["g_other","g_other"],"7":["g_other","g_other"],"8":["g_other","g_other"],"9":["g_other","g_other"]};
+const PPE_CLASSES = [
+  ["1210101","الأراضي"],["12102","المباني"],["12113","مباني على أراضٍ مستأجرة"],["12104","سيارات ومعدات نقل ثقيلة"],["12103","آلات ومعدات"],["12105","سيارات خفيفة"],
+  ["12106","أجهزة كهربائية وتكييف"],["12107","أجهزة حاسب وأدوات مكتبية"],["12108","أنظمة أمن وسلامة"],["12109","أثاث ومفروشات"],["12110","ديكورات وأرفف وتجهيزات"],["12111","عدد وأدوات"],
+];
+const isDepAcc = name => /مجمع/.test(name);
+
+function mapRow(r, rules, overrides){
+  const key = r.gl + (r.sub ? "/" + r.sub : "");
+  if (overrides && overrides[key]) return overrides[key];
+  const nm = normAr(r.name);
+  let best = null, bestLen = -1, bestKw = false;
+  for (const rule of rules){
+    const [p, dr, cr, kw] = rule;
+    if (!String(r.gl).startsWith(p)) continue;
+    const hasKw = !!kw;
+    if (hasKw && !nm.includes(normAr(kw))) continue;
+    if (hasKw > bestKw || (hasKw === bestKw && p.length > bestLen)){ best = rule; bestLen = p.length; bestKw = hasKw; }
+  }
+  if (!best){ const f = FALLBACK_MAP[String(r.gl)[0]]; return f ? (r.current >= 0 ? f[0] : f[1]) : null; }
+  return r.current >= 0 ? best[1] : best[2];
+}
+function normAr(s){ return String(s??"").replace(/[ً-ْـ]/g,"").replace(/[أإآ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/\s+/g," ").trim(); }
+
+// rows: [{gl, sub, name, glName, prior, current, mdr, mcr}] ; returns {sub: value(debit +)} for the current year plus unmapped list
+function buildFS(rows, rules, overrides, adjustments){
+  const v = {}, src = {}, unmapped = [];
+  Object.keys(FS_SUB).forEach(k => { v[k] = 0; src[k] = []; });
+  rows.forEach(r => {
+    if (Math.abs(r.current) < 0.005) return;
+    let s = mapRow(r, rules, overrides);
+    if (s === "ppe_cost" && isDepAcc(r.glName || r.name)) s = "ppe_dep";
+    if (!s || !(s in v)){ unmapped.push(r); return; }
+    v[s] += r.current; src[s].push(r);
+  });
+  (adjustments||[]).forEach(a => (a.lines||[]).forEach(l => { if (l.sub in v) v[l.sub] += (+l.dr||0) - (+l.cr||0); }));
+  return {v, src, unmapped};
+}
+function lineTotals(v){
+  const t = {};
+  FS_LINES.forEach(l => t[l.id] = l.subs.reduce((s,[id]) => s + (v[id]||0), 0));
+  return t;
+}
+// Statement figures in presentation sign: assets +, liabilities/equity +, income +, expenses −
+function statements(v){
+  const t = lineTotals(v);
+  const plLines = FS_LINES.filter(l => !BS_SECS.includes(l.sec));
+  const netIncome = -plLines.reduce((s,l) => s + t[l.id], 0);
+  const p = id => {
+    const l = FS_LINES.find(x => x.id===id);
+    return ["ca","nca"].includes(l.sec) ? t[id] : -t[id];
+  };
+  const sum = sec => FS_LINES.filter(l => l.sec===sec).reduce((s,l) => s + p(l.id), 0);
+  const eq = sum("eq") + netIncome;
+  const ca = sum("ca"), nca = sum("nca"), cl = sum("cl"), ncl = sum("ncl");
+  return {t, p, netIncome, ca, nca, cl, ncl, eq, assets: ca+nca, liab: cl+ncl, diff: (ca+nca) - (cl+ncl+eq),
+    gross: p("sales") + p("cogs"), opex: p("sell") + p("gna")};
+}
+
+
+// ---------- accounting policies & notes text (from the 2025 draft statements) ----------
+const DEFAULT_POLICIES = [
+  {id:"p1", t:"1 - التنظيم والأنشطة", body:`{الشركة} (شركة ذات مسؤولية محدودة) - مسجلة بالسجل التجاري رقم {السجل_التجاري}. ويتمثل نشاط الشركة في ........
+العنوان المسجل للشركة: {العنوان}.
+
+**الفروع**
+فيما يلي بيان بفروع الشركة (رقم السجل الفرعي، تاريخه، الموقع، النشاط):
+`},
+  {id:"p2", t:"2 - أساس الإعداد", body:`**2-1 بيان الالتزام**
+تم إعداد هذه القوائم المالية وفقاً للمعيار الدولي للتقرير المالي للمنشآت صغيرة ومتوسطة الحجم الصادر عن مجلس معايير المحاسبة الدولية والمعتمد في المملكة العربية السعودية والمعايير والإصدارات الأخرى المعتمدة من الهيئة السعودية للمراجعين والمحاسبين (ويشار إليها مجتمعة بـ "المعيار الدولي للتقرير المالي للمنشآت صغيرة ومتوسطة الحجم المعتمد في المملكة العربية السعودية").
+
+**2-2 الأحكام والتقديرات**
+يتطلب إعداد القوائم المالية، طبقاً للمعيار الدولي للتقرير المالي للمنشآت صغيرة ومتوسطة الحجم، استخدام بعض التقديرات المحاسبية الهامة. كما يتطلب من الإدارة ممارسة الأحكام عند تطبيق السياسات المحاسبية للشركة. وقد تم الإفصاح عن ذلك في الإيضاح (4).
+
+**2-3 أسس القياس**
+تم إعداد هذه القوائم المالية وفقاً لمبدأ التكلفة التاريخية باستخدام أساس الاستحقاق المحاسبي ومبدأ الاستمرارية.
+
+**2-4 العملة الوظيفية وعملة العرض**
+يعتبر الريال السعودي العملة الوظيفية للشركة وعملة العرض، وتم تقريب المبالغ إلى أقرب ريال سعودي، ما لم يتم إظهارها بخلاف ذلك.`},
+  {id:"p3a", t:"3 - ملخص السياسات المحاسبية الهامة (تصنيف، عملات، نقدية، مدينون، مخزون)", body:`فيما يلي بياناً بالسياسات المحاسبية الهامة المتبعة في إعداد هذه القوائم المالية:
+
+**3-1 تصنيف الموجودات والمطلوبات كمتداولة وغير متداولة**
+**الموجودات**
+تعرض الشركة الموجودات والمطلوبات في قائمة المركز المالي استناداً إلى التصنيف متداول / غير متداول. يتم تصنيف الأصل ضمن الموجودات المتداولة في حالة:
+• توقع بيع الأصل أو هناك نية لبيعه أو استهلاكه خلال دورة الأعمال العادية للشركة، أو
+• الاحتفاظ بالأصل بشكل رئيسي بغرض المتاجرة، أو
+• توقع بيع الأصل خلال 12 شهراً بعد تاريخ قائمة المركز المالي، أو
+• كون الأصل نقداً أو في حكم النقد إلا إذا كان محظوراً تبادل الأصل أو استخدامه لتسوية التزام ما خلال 12 شهراً على الأقل من تاريخ قائمة المركز المالي.
+تقوم الشركة بتصنيف جميع الأصول الأخرى كموجودات غير متداولة.
+**المطلوبات**
+يعتبر الالتزام ضمن المطلوبات المتداولة في حالة:
+• توقع تسوية الالتزام خلال دورة الأعمال العادية للشركة،
+• الاحتفاظ بالالتزام بشكل رئيسي بغرض المتاجرة،
+• توقع تسوية الالتزام خلال 12 شهراً بعد تاريخ قائمة المركز المالي، أو
+• عدم وجود حق غير مرتبط بشرط لتأجيل تسوية الالتزام على مدى 12 شهراً على الأقل بعد تاريخ قائمة المركز المالي.
+تقوم الشركة بتصنيف جميع الالتزامات الأخرى كمطلوبات غير متداولة.
+
+**3-2 العملات الأجنبية**
+تسجل المعاملات التي تتم بعملات أجنبية مبدئياً من طرف الشركة بعملتها الوظيفية وبالسعر الفوري السائد في التاريخ الذي تتأهل فيه المعاملة أولاً للإدراج. يتم تحويل الموجودات والمطلوبات النقدية المقومة بعملة أجنبية إلى العملة الوظيفية بأسعار الصرف الفورية للعملة الوظيفية السائدة في تاريخ قائمة المركز المالي. وتسجل جميع الفروقات الناشئة عن التسوية أو التحويل على البنود النقدية في قائمة الدخل الشامل.
+يتم إعادة تحويل البنود غير النقدية التي يتم قياسها بالتكلفة التاريخية لعملة أجنبية باستخدام أسعار الصرف كما في تاريخ المعاملات الأولية ولا يتم تعديلها لاحقاً. يتم تحويل البنود غير النقدية التي يتم قياسها بالقيمة العادلة لعملة أجنبية باستخدام أسعار الصرف في التاريخ الذي جرى فيه تحديد القيمة العادلة. يتم التعامل مع الربح أو الخسارة الناشئة عن تحويل البنود غير النقدية التي يتم قياسها بالقيمة العادلة بما يتماشى مع الاعتراف بالربح أو الخسارة من التغيرات في القيمة العادلة للبند.
+
+**3-3 النقدية**
+تتكون النقدية من النقد في الصندوق ولدى البنوك.
+
+**3-4 المدينون التجاريون والآخرون**
+تظهر الذمم المدينة بالمبلغ الأصلي للفاتورة ناقصاً المخصص لقاء الديون المشكوك في تحصيلها، يجنب مخصص الديون المشكوك في تحصيلها عندما يكون هناك دليل موضوعي على أن الشركة لن تكون قادرة على تحصيل كافة المبالغ المستحقة وفقاً للشروط الأصلية للذمم المدينة. ويتم تحميل المخصصات في قائمة الدخل وتدرج ضمن المصروفات العمومية والإدارية. عندما تكون الذمم غير قابلة للتحصيل، يتم شطبها مقابل مخصص الديون المشكوك فيها.
+
+**3-5 المخزون**
+تظهر البضاعة بالتكلفة أو سعر البيع ناقصاً تكاليف الإكمال والبيع، أيهما أقل. تحسب التكلفة على أساس المتوسط المرجح.
+**الانخفاض في القيمة**
+يتم، بتاريخ كل قائمة مركز مالي، إجراء تقويم للتأكد من وجود انخفاض على قيمة البضاعة. وفي حالة وجود انخفاض في قيمة البضاعة، يتم تخفيض القيمة الدفترية إلى سعر البيع ناقصاً تكاليف الإكمال والبيع. يتم إثبات خسارة الانخفاض في القيمة مباشرةً في الربح أو الخسارة في قائمة الدخل الشامل.`},
+  {id:"p3b", t:"3 - السياسات (الأدوات المالية، الممتلكات، الانخفاض، القروض)", body:`**3-6 الموجودات المالية والمطلوبات المالية**
+تشتمل الموجودات المالية المسجلة في قائمة المركز المالي بشكل أساسي على النقدية، والمدينين التجاريين والآخرين، تشتمل المطلوبات المالية على الدائنين التجاريين والمبالغ المستحقة الدفع والدائنين الآخرين.
+**الانخفاض في قيمة الموجودات المالية وعدم إمكانية تحصيلها**
+يتم، بتاريخ كل قائمة مركز مالي، إجراء تقويم للتأكد من وجود دليل على وجود انخفاض في قيمة أصل مالي محدد. وفي حالة وجود مثل هذا الدليل، يتم إثبات خسارة الانخفاض في الربح أو الخسارة في قائمة الدخل الشامل. يحدد الانخفاض في القيمة على النحو التالي:
+• بالنسبة للموجودات المسجلة بالتكلفة المطفأة، يمثل الانخفاض في القيمة الفرق بين القيمة الدفترية والقيمة الحالية للتدفقات النقدية المستقبلية المخصومة على أساس معدل العمولة الفعلي الأصلي.
+• تمثل خسارة الانخفاض في القيمة الفرق بين القيمة الدفترية للأصل وأفضل تقدير (والذي بالضرورة سيكون تقريبي) للمبلغ (الذي يمكن أن يكون صفر) الذي ستستلمه الشركة مقابل الأصل إذا كان سيتم بيعه بتاريخ إعداد القوائم المالية.
+**مقاصة الموجودات المالية والمطلوبات المالية**
+تتم مقاصة الموجودات المالية والمطلوبات المالية وتدرج بالصافي في القوائم المالية عند وجود حق نظامي ملزم لمقاصة المبالغ المثبتة وعند وجود نية لتسوية الموجودات مع المطلوبات على أساس الصافي، أو تحقيق الموجودات وسداد المطلوبات في آن واحد.
+
+**3-7 الممتلكات والآلات والمعدات**
+تقيد، في الأصل، الممتلكات والآلات والمعدات بالتكلفة، وتظهر بالتكلفة ناقصاً الاستهلاك المتراكم وأي انخفاض في القيمة. تستهلك التكلفة ناقصاً القيمة التقديرية المتبقية على مدى الأعمار الإنتاجية المقدرة للموجودات بطريقة القسط الثابت وكما يلي:
+{نسب_الإهلاك}
+تتم مراجعة القيمة المتبقية والأعمار الإنتاجية وطرق الاستهلاك ويتم تعديلها مستقبلاً، إذا كان ذلك ملائماً، في حالة وجود دليل على وجود تغير هام منذ تاريخ أحدث تقرير.
+تتم مراجعة القيمة الدفترية للممتلكات والآلات والمعدات للتأكد من وجود انخفاض في قيمتها وذلك عندما تشير الأحداث أو التغيرات في الظروف إلى عدم إمكانية استرداد قيمتها الدفترية. وفي حالة وجود مثل هذا الدليل وزيادة القيمة الدفترية عن القيمة المقدرة القابلة للاسترداد، تخفض الموجودات إلى القيمة القابلة للاسترداد لها.
+تحدد أرباح أو خسائر الاستبعاد (وذلك بمقارنة متحصلات الاستبعاد مع القيمة الدفترية للأصل)، ويتم إثباتها ضمن "إيرادات أخرى" في قائمة الدخل الشامل.
+
+**3-8 الانخفاض في قيمة الموجودات غير المالية**
+يتم، بتاريخ إعداد كل قوائم مالية، مراجعة الممتلكات والآلات والمعدات، للتأكد من وجود دليل على وقوع خسائر انخفاض في قيمتها. وفي حالة وجود دليل على أي انخفاض محتمل، يتم تقدير القيمة القابلة للاسترداد للأصل المتأثر (أو الوحدات المدرة للنقدية) ومقارنتها مع قيمتها الدفترية. وإذا كانت القيمة القابلة للاسترداد أقل، تخفض القيمة الدفترية للأصل إلى القيمة المقدرة القابلة للاسترداد، ويتم إثبات خسارة الانخفاض فوراً في الربح أو الخسارة في قائمة الدخل الشامل.
+وبالمقابل، يتم، بتاريخ إعداد كل قوائم مالية، إجراء تقويم للبضاعة للتأكد من وجود انخفاض في قيمتها وذلك بمقارنة القيمة الدفترية لكل بند من بنود البضاعة (أو مجموعة من البنود المتشابهة) مع سعر البيع ناقصاً تكاليف البيع. وفي حالة وجود انخفاض في قيمة أي بند من بنود البضاعة (أو مجموعة من البنود المتشابهة)، عندئذ تخفض قيمته الدفترية إلى سعر البيع ناقصاً تكاليف البيع، ويتم إثبات خسارة الانخفاض فوراً في قائمة الدخل الشامل.
+
+**3-9 القروض والتسهيلات البنكية**
+يتم إدراج القروض بالمبالغ المستلمة بعد خصم تكاليف المعاملة المتكبدة، كما يتم تأجيل العمولات الإدارية المخصومة مقدماً وعرضها مخصومة من مبلغ القرض الأصلي. يتم إطفاء تلك العمولات، والتي لا تختلف جوهرياً عن معدل الفائدة على القروض السائدة في السوق، على مدى عمر القرض بطريقة القسط الثابت. ويتم رسملة تكاليف الاقتراض العائدة مباشرة لإنشاء موجودات مؤهلة حتى تصل إلى المرحلة التي يكتمل عندها بشكل جوهري جميع الأنشطة اللازمة لإعداد الموجودات المؤهلة للاستخدام المحدد لها، وبخلاف ذلك، يتم تحميل هذه التكاليف على قائمة الدخل.`},
+  {id:"p3c", t:"3 - السياسات (الدائنون، الأطراف ذات العلاقة، المخصصات، الزكاة، المنافع، الإيرادات، الاحتياطي)", body:`**3-10 الدائنون التجاريون والمبالغ المستحقة الدفع والدائنون الآخرون**
+الذمم الدائنة التجارية هي عبارة عن التزامات بسداد قيمة البضائع أو الخدمات التي يتم الحصول عليها في سياق العمل الاعتيادي من الموردين. يتم تصنيف الذمم الدائنة التجارية كمطلوبات متداولة إذا كانت هذه الذمم مستحقة السداد خلال سنة واحدة أو أقل، وإلا يتم عرضها كمطلوبات غير متداولة. ويتم إثبات الذمم الدائنة التجارية مبدئياً بسعر المعاملة وتقاس لاحقاً بالتكلفة المطفأة باستخدام طريقة معدل الفائدة الفعلي.
+
+**3-11 المعاملات مع الأطراف ذات علاقة**
+يتم اعتماد شروط وأحكام هذه المعاملات من قبل إدارة الشركة وتتعامل الشركة خلال النشاط الاعتيادي لأعمالها بمعاملات مع الأطراف ذات العلاقة على أساس أسعار وشروط عقود معتمدة من إدارة الشركة.
+
+**3-12 المخصصات**
+يجب على الشركة إثبات المخصصات:
+• عندما يكون لديها التزامات قانونية حالية أو متوقعة نتيجة لأحداث سابقة.
+• عندما يحتمل أن يتطلب الأمر استخدام موارد تنطوي على منافع اقتصادية لسداد الالتزام في المستقبل.
+• عند تقدير المبلغ بشكل موثوق به.
+• عندما يكون أثر القيمة الزمنية للنقود جوهري، تخصم المخصصات باستخدام معدل ما قبل الضريبة والزكاة الذي يعكس تقديرات السوق الحالية للقيمة الزمنية للنقود والمخاطر المصاحبة للالتزام. وعند استخدام الخصم، يتم إثبات الزيادة في المخصص مع مرور الوقت كجزء من تكاليف التمويل في الربح أو الخسارة في قائمة الدخل الشامل.
+
+**3-13 مخصص الزكاة**
+تحتسب الزكاة وفقاً لأنظمة هيئة الزكاة والضريبة والجمارك المطبقة في المملكة العربية السعودية على أساس الاستحقاق. يحمّل المخصص على قائمة الدخل الشامل. تعدل الفروقات، الناتجة عن الربوط النهائية إن وجدت، في الفترة التي يتم الانتهاء فيها من الربوط.
+
+**3-14 التزامات المنافع المحددة للموظفين**
+تقتصر منافع الموظفين التي تمنحها الشركة لموظفيها بعد انتهاء التوظيف على "مكافأة نهاية الخدمة" فقط، حيث لم يتم استخدام وحدة الائتمان المخططة لقياس التزام مكافأة نهاية الخدمة نظراً لتقييم الإدارة بوجود جهد وتكلفة غير مبررين، ثم استخدام النموذج المبسط دون الاستعانة بخبير إكتواري، تعتقد الإدارة أن رصيد التزام مكافأة نهاية الخدمة والذي يتم احتسابه وفقاً لنظام العمل والعمال السعودي طبقاً للسياسة المحاسبية المتبعة في الشركة، في تاريخ قائمة المركز المالي لا يختلف اختلافاً جوهرياً عن الرصيد وفقاً للاحتساب باستخدام الحسبة الاكتوارية.
+
+**3-15 إثبات المبيعات**
+تتحقق إيرادات المبيعات بشكل أساسي من بيع البضاعة، ويتم قياسها بالقيمة العادلة للمبلغ المستلم أو المستحق القبض. يتم إظهار المبالغ المفصح عنها كإيرادات بعد خصم المرتجعات والخصومات والتخفيضات التجارية.
+**مبيعات البضاعة**
+يتم إثبات مبيعات البضاعة عند استيفاء الشروط التالية:
+أ. انتقال المخاطر والمنافع الهامة المصاحبة لملكية البضاعة، ويتم ذلك عند انتقال الملكية للعميل.
+ب. عدم الاحتفاظ بعلاقة إدارية مستمرة بالقدر الذي يتعلق عادةً بالملكية ولا بالسيطرة الفعلية على السلع المباعة.
+ج. إمكانية قياس مبلغ الإيرادات بشكل موثوق به.
+د. احتمال تدفق المنافع الاقتصادية المصاحبة للبيع إلى الشركة.
+هـ. إمكانية قياس التكاليف المتكبدة أو التي سيتم تكبدها بشأن عملية البيع بشكل موثوق به.
+
+**3-16 الإيجار الرأسمالي**
+يتم إثبات الإيجار الرأسمالي كأصل مستأجر والتزام في نفس الوقت وذلك بالقيمة الحالية للحد الأدنى لدفعات الإيجار أو القيمة السوقية للأصل في تاريخ نشأة الإيجار أيهما أقل باستخدام معدل الفائدة المحتسب عن طريق المؤجر أو معدل تكلفة التمويل الإضافي من الغير كمعدل للخصم عند حساب القيمة الحالية للحد الأدنى لدفعات الإيجار.
+
+**3-17 الاحتياطي النظامي**
+طبقاً لنظام الشركات السعودي، يجب على الشركة أن تحول 10% من صافي دخل السنة إلى الاحتياطي النظامي حتى يبلغ مجموع الاحتياطي 30% من رأس المال، وهذا الاحتياطي غير قابل للتوزيع.`},
+  {id:"p3d", t:"3 - السياسات (المصروفات، التمويل، الإيجارات، الأرباح، التدفقات)", body:`**3-18 المصروفات**
+يتم الاعتراف بجميع المصروفات شاملة مصروفات التشغيل التي تعود مباشرة إلى أنشطة التشغيل الأساسية للشركة، بالإضافة إلى المصروفات العمومية والإدارية والمصروفات الأخرى، وتدرج بقائمة الدخل في الفترة المالية التي تحققت فيها تلك المصروفات.
+إن مصروفات البيع والتسويق هي تلك المصروفات التي تتعلق بموظفي المبيعات والإعلان والمصروفات العرضية الأخرى المتعلقة بها، وتصنف جميع المصروفات الأخرى غير المباشرة كمصروفات عمومية وإدارية.
+
+**3-19 مصاريف التمويل**
+تمثل مصاريف التمويل العمولة والتكاليف الأخرى التي تتكبدها المنشأة بشأن اقتراض الأموال. تتضمن مصاريف التمويل الآتي:
+أ. الأعباء المالية على القروض البنكية المحتسبة باستخدام طريقة العمولة الفعلية.
+ب. تقوم الشركة بإثبات جميع تكاليف الاقتراض كمصروف في قائمة الدخل الشامل في الفترة التي يتم تكبدها فيها.
+
+**3-20 الإيجارات**
+يصنف عقد الإيجار على أنه عقد إيجار تمويلي إذا كان يحول كافة المخاطر والمنافع المصاحبة لملكية الأصل المستأجر إلى الشركة. تصنف كافة الإيجارات الأخرى كعقود إيجارات تشغيلية.
+**الشركة كمستأجر**
+يتم إثبات حقوق الموجودات المقتناة بموجب عقود الإيجار التمويلي كموجودات خاصة بالشركة بالقيمة العادلة للعقار المستأجر (أو إذا كانت أقل، بالقيمة الحالية للحد الأدنى لدفعات الإيجار) عند نشأة عقد الإيجار. تدرج الالتزامات المقابلة تجاه المؤجر في قائمة المركز المالي كالتزامات بموجب عقود إيجار تمويلي. توزع دفعات الإيجار التمويلي بين تكاليف التمويل والنقص في التزامات الإيجار للحصول على معدل عائد ثابت على الرصيد المتبقي من الالتزام. يجب احتساب القيمة الحالية للحد الأدنى لدفعات الإيجار باستخدام معدل العمولة الضمني في عقد الإيجار. تخصم تكاليف التمويل عند قياس الربح أو الخسارة في قائمة الدخل الشامل. تدرج الموجودات المقتناة بموجب عقود الإيجار التمويلي ضمن الممتلكات والآلات والمعدات، وتستهلك على مدى العمر الإنتاجي المقدر للأصل وفترة الإيجار. تحمل دفعات الإيجار بموجب عقود الإيجارات التشغيلية على الربح أو الخسارة بطريقة القسط الثابت على مدى فترة الإيجار المعني.
+
+**3-21 توزيعات الأرباح**
+تقيد الأرباح الموزعة في القوائم المالية في الفترة التي يتم فيها الموافقة على التوزيع من قبل الشركاء السنوية للشركة حيث تقيد هذه التوزيعات كالتزام على الشركة وتطرح من الأرباح المبقاة.
+
+**3-22 قائمة التدفقات النقدية**
+يتم إعداد قائمة التدفقات النقدية طبقاً للطريقة غير المباشرة.`},
+  {id:"p4", t:"4 - التقديرات والافتراضات والأحكام المحاسبية الهامة", body:`يتطلب إعداد القوائم المالية للشركة من الإدارة إجراء الأحكام والتقديرات والافتراضات التي قد تؤثر على مبالغ الإيرادات والمصاريف والموجودات والمطلوبات المسجلة والإفصاح عن الالتزامات المحتملة بتاريخ إعداد القوائم المالية. وقد يترتب عن عدم التأكد من هذه الافتراضات والتقديرات إجراء تعديل جوهري على القيم الدفترية للموجودات أو المطلوبات التي ستتأثر بذلك في المستقبل.
+تستند هذه التقديرات والافتراضات على الخبرة وعوامل أخرى مختلفة يعتقد بأنها معقولة وفقاً للظروف وتستخدم لقياس القيم الدفترية للموجودات والمطلوبات التي يصعب الحصول عليها من مصادر أخرى. تتم مراجعة التقديرات والافتراضات المعنية بصورة مستمرة. يتم إثبات التعديلات على التقديرات المحاسبية في الفترة التي يتم فيها تعديل التقديرات أو في فترة التعديل والفترات المستقبلية إذا كانت التقديرات المتغيرة تؤثر على الفترة الحالية والفترات المستقبلية.
+
+**4-1 المصادر الرئيسية لعدم التأكد من التقديرات**
+تم أدناه عرض الافتراضات الأساسية المتعلقة بالمستقبل والمصادر الرئيسية الأخرى لعدم التأكد من التقديرات بتاريخ إعداد القوائم المالية، والتي قد ينتج عنها فروقات جوهرية في القيمة الدفترية للموجودات والمطلوبات خلال الفترة المالية التالية. استخدمت الشركة هذه الافتراضات والتقديرات المتاحة عند إعداد القوائم المالية. ومع ذلك، قد تتغير الظروف والافتراضات القائمة والمتعلقة بالتطورات المستقبلية نتيجة لتغيرات السوق أو الظروف التي تنشأ خارجة عن سيطرة الشركة. يتم إظهار هذه التغيرات في الافتراضات عند حدوثها.
+
+**4-1-1 الانخفاض في قيمة الموجودات غير المالية**
+يحدث الانخفاض في القيمة عند زيادة القيمة الدفترية للأصل أو الوحدة المدرة للنقدية عن القيمة القابلة للاسترداد، والتي تمثل القيمة العادلة ناقصة تكاليف الاستبعاد أو القيمة الحالية، أيهما أعلى. يتم احتساب القيمة العادلة ناقصة تكاليف الاستبعاد على أساس البيانات المتاحة لمعاملات البيع الملزمة، التي تمت بشروط تعامل عادل، لموجودات مماثلة أو أسعار السوق القابلة للملاحظة ناقصة التكاليف الإضافية لاستبعاد الأصل. يتم احتساب القيمة الحالية على أساس طريقة التدفقات النقدية المخصومة. يتم تحديد التدفقات النقدية من الموازنة التقديرية للسنوات الخمس القادمة ولا تشمل أنشطة إعادة الهيكلة التي لم تلتزم بها الشركة بعد أو الاستثمارات المستقبلية الهامة التي من شأنها تعزيز أداء الوحدة المدرة للنقدية الخاضعة لاختبار الانخفاض في القيمة. تتأثر القيمة القابلة للاسترداد بمعدل الخصم المستخدم في طريقة التدفقات النقدية المخصومة وكذلك التدفقات النقدية الواردة المستقبلية المتوقعة ومعدل النمو المستخدم لأغراض الاستقراء.
+
+**4-1-2 المخصصات**
+تعتمد المخصصات، بحسب طبيعتها، على تقديرات وعمليات تقويم للتأكد فيما إذا تم استيفاء ضوابط الإثبات، بما في ذلك تقدير المبالغ المحتمل سدادها. تستند مخصصات الدعاوى القضائية إلى تقدير التكاليف، بعد الأخذ بعين الاعتبار، المشورة القانونية وغيرها من المعلومات المتاحة حالياً. كما تتضمن مخصصات مكافأة نهاية الخدمة وتكاليف المغادرة، إن وجدت، حكم الإدارة في تقدير التدفقات النقدية الصادرة المتوقعة لدفع مكافأة نهاية الخدمة وإغلاق المواقع أو تكاليف المغادرة الأخرى. تتضمن المخصصات المتعلقة بالمطلوبات غير المؤكدة، أفضل تقديرات الإدارة فيما إذا كان من المحتمل وقوع التدفقات النقدية الصادرة.
+
+**4-1-3 الافتراضات طويلة الأجل المتعلقة بمنافع الموظفين**
+تمثل مكافأة نهاية الخدمة، الالتزامات التي سيتم سدادها في المستقبل وتتطلب وضع افتراضات في تقدير الالتزامات والقيمة العادلة لموجودات البرنامج، إن وجدت. يتعين على الإدارة إجراء المزيد من الافتراضات المتعلقة بالمتغيرات مثل معدلات الخصم ومعدل الزيادة في الرواتب والعائد على الموجودات ومعدلات الوفيات ومعدل دوران الموظفين. يمكن أن يكون للتغيرات في الافتراضات الأساسية تأثير هام على التزامات المنافع المتوقعة و/أو تكاليف منافع الموظفين المحددة الدورية المتكبدة.
+
+**4-1-4 الأعمار الإنتاجية المقدرة للممتلكات والآلات والمعدات**
+تقوم إدارة الشركة بتحديد الأعمار الإنتاجية المقدرة للممتلكات والآلات والمعدات لأغراض الاستهلاك على أساس القسط الثابت على مدى الأعمار الإنتاجية المقدرة لها. يتم تحديد هذا التقدير بعد الأخذ بعين الاعتبار الاستخدام المتوقع للأصل أو الاستهلاك العادي.
+تقوم الإدارة بمراجعة الأعمار الإنتاجية والقيمة المتبقية للموجودات على الأقل مرة واحدة في الفترة، وسيتم في نهاية كل فترة مالية تعديل قسط الاستهلاك المستقبلي في حالة اعتقاد الإدارة بأن الأعمار الإنتاجية تختلف عن التقديرات السابقة.
+
+**4-1-5 انخفاض الذمم المدينة التجارية**
+يتم إجراء تقدير للمبالغ القابلة للتحصيل من الذمم المدينة التجارية عند عدم إمكانية تحصيل المبلغ بالكامل. بالنسبة لكل مبلغ من المبالغ الهامة، يتم إجراء هذا التقدير لكل مبلغ على حده. أما المبالغ التي لا تعتبر هامة بمفردها ولكنها متأخرة السداد، فإنه يتم تقديرها بشكل جماعي، ويجنب مخصص حسب طول مدة التأخر في السداد بناءً على معدلات التحصيل السابقة.
+
+**4-1-6 انخفاض قيمة البضاعة**
+تظهر البضاعة بالتكلفة أو صافي القيمة البيعية، أيهما أقل. وعندما تصبح البضاعة قديمة أو متقادمة، يتم إجراء تقدير لصافي القيمة البيعية لها. بالنسبة لكل مبلغ من المبالغ الهامة، يتم إجراء هذا التقدير لكل مبلغ على حده. أما المبالغ غير الهامة بمفردها والتي تعتبر قديمة أو متقادمة، فإنه يتم تقديرها بشكل جماعي ويجنب مخصص حسب نوع البضاعة وعمرها أو درجة تقادمها على أساس أسعار البيع المتوقعة.
+
+**4-1-7 مبدأ الاستمرارية**
+قامت إدارة الشركة بعمل تقييم لقدرتها على الاستمرار على أساس مبدأ الاستمرارية وتوصلت إلى أن لديها الموارد للاستمرار في نشاطها في المستقبل المنظور. إضافة لذلك ليست الإدارة على دراية بأي عدم تيقن جوهري، قد يلقي بظلال من الشك حول قدرة الشركة على الاستمرار. وبالتالي، تم الاستمرار في إعداد القوائم المالية على أساس مبدأ الاستمرارية.
+
+**4-1-8 قياس القيمة العادلة للأدوات المالية**
+في حالة عدم إمكانية قياس القيمة العادلة للموجودات المالية والمطلوبات المالية المسجلة في قائمة المركز المالي على أساس الأسعار المتداولة في أسواق نشطة، تحدد قيمتها العادلة باستخدام طرق تقويم تشتمل على نموذج التدفقات النقدية المخصومة. إن المدخل إلى هذه النماذج يتم من خلال الأسواق القابلة للملاحظة، إذا كان ذلك ممكناً، وإذا لم يكن ذلك مجدياً فإنه يجب استخدام درجة من الأحكام لتحديد القيمة العادلة. تشتمل الأحكام على الأخذ بالاعتبار المدخلات مثل مخاطر السيولة، ومخاطر الائتمان والتقلبات. إن تغير الافتراضات المتعلقة بهذه العوامل سيؤثر على القيمة العادلة المسجلة للأدوات المالية.`},
+];
+// Depreciation rates disclosed in policy 3-7, matched to PPE classes by keyword
+const DEFAULT_RATES = [
+  ["مستاجر","5% - 12.5%"],["اراضي","لا تستهلك"],["مباني","3% - 5%"],["ثقيل","10%"],["سيارات","15%"],["حاسب|مكتبي","20%"],["امن|سلامه","20%"],
+  ["اثاث","10%"],["ديكور|ارفف","10%"],["كهربائي|تكييف|مكيفات","25%"],["عدد","25%"],["الات|معدات","10%"],
+];
+
+// ---------- financial statements: data ----------
+// Comparatives (debit +) until the user saves their own: rolled over from last year, typed in the notes, or restored from a backup
+const DRAFT_PRIOR = {label:"", oci:0, source:"لم تُدخل أرقام المقارنة بعد", v:{}};
+const ADJ_PRESETS = [
+  ["مخصص الزكاة للسنة", [["zakat_exp","D"],["zakat","C"]]],
+  ["تأجيل مصروف مدفوع مقدمًا", [["prepaid","D"],["g_rent","C"]]],
+  ["إثبات مصروفات مستحقة", [["g_other","D"],["accr","C"]]],
+  ["مخصص ديون مشكوك في تحصيلها", [["g_other","D"],["ecl","C"]]],
+  ["مخصص مخزون متقادم", [["cogs","D"],["invprov","C"]]],
+  ["فرق استهلاك", [["g_dep","D"],["ppe_dep","C"]]],
+  ["فرق مخصص نهاية الخدمة", [["g_eosb","D"],["eosb","C"]]],
+];
+const SEC_T = {ca:"الموجودات المتداولة", nca:"الموجودات غير المتداولة", cl:"المطلوبات المتداولة", ncl:"المطلوبات غير المتداولة", eq:"حقوق الملكية"};
+const lineOf = id => FS_LINES.find(l => l.id===id);
+const assetSec = sec => sec==="ca" || sec==="nca";
+// presentation sign of a sub-line value: assets as is, everything else flipped
+const pres = (sub, v) => assetSec(lineOf(FS_SUB[sub].line).sec) ? v : -v;
+
+function subOptions(sel){
+  return FS_LINES.map(l => `<optgroup label="${esc(l.t)}${l.note?" (إيضاح "+l.note+")":""}">${l.subs.map(([id,t]) => `<option value="${id}" ${sel===id?"selected":""}>${esc(t)}</option>`).join("")}</optgroup>`).join("");
+}
+const subLabel = id => { const s = FS_SUB[id]; if (!s) return ""; const l = lineOf(s.line); return l.subs.length>1 ? l.t+" · "+s.t : l.t; };
+
+// ---------- financial statements: computation ----------
+function fsRows(){
+  return leafRows().map(r => ({key:r.key, gl:String(r.gl), sub:r.sub?String(r.sub):"", name:r.name, glName:r.glName||"", current:r.current, prior:r.prior, mdr:r.mdr||0, mcr:r.mcr||0}));
+}
+// Name keywords for accounts whose code the default map doesn't know precisely (other charts of accounts).
+// [keywords, sub when debit, sub when credit, allowed first digits]
+const NAME_MAP = [
+  ["مجمع اهلاك|مجمع الاهلاك|مجمع استهلاك|مجمع الاستهلاك","ppe_dep","ppe_dep","1"],
+  ["عملاء دفعات مقدمه|دفعات مقدمه من العملاء","ar_gross","custadv","12"],["دفعات مقدمه|موردين مدينين","supadv","ap","12"],
+  ["عملاء|عميل|ذمم مدينه|اوراق قبض","ar_gross","custadv","1"],["موردين|موردون|مورد|ذمم دائنه|مقاولين","supadv","ap","12"],
+  ["صندوق|خزينه|نقديه","cashbox","cashbox","1"],["بنك|مصرف|حساب جاري","bank","stloan","1"],
+  ["مخصص ديون|مشكوك","ecl","ecl","12"],["مخصص مخزون|بطيئه الحركه|تقادم","invprov","invprov","12"],["مخزون|بضاعه|مواد خام","inv_gross","inv_gross","1"],
+  ["مدفوعه مقدما|مقدمه","prepaid","accr","12"],["سلف|عهد","emp","otherpay","12"],["ضمان","bankguar","otherpay","1"],
+  ["اراضي|مباني|الات|معدات|سيارات|اثاث|اجهزه|ديكور|ارفف|عدد وادوات|انظمه امن|تحسينات","ppe_cost","ppe_cost","1"],
+  ["ضريبه القيمه|القيمه المضافه","vat","vat","12"],["زكاه","zakat","zakat","2"],["نهايه الخدمه","eosb","eosb","2"],
+  ["قروض طويله|مرابحات طويله|تسهيلات طويله","ltloan","ltloan","2"],["قروض|قرض|تسهيلات|مرابح","stloan","stloan","2"],["ايجار تمويلي|التزامات الايجار","leasest","leasest","2"],
+  ["مستحقه|مستحقات","prepaid","accr","2"],["جاري الشركاء|جاري الملاك|جاري الشريك","rpdr","rpcr","23"],
+  ["راس المال","cap","cap","3"],["احتياطي","reserve","reserve","3"],["ارباح مبقاه|ارباح مرحله|خسائر مرحله|ارباح محتجزه","re","re","3"],["اعاده تقييم","reval","reval","3"],
+  ["مردودات المبيعات|مرتجعات","salesret","salesret","4"],["خصم مسموح","salesdisc","salesdisc","4"],["ايرادات اخرى|ايرادات متنوعه","oth_inc","oth_inc","4"],["مبيعات|ايرادات","sales","sales","4"],
+  ["تكلفه المبيعات|تكلفه الايرادات","cogs","cogs","56789"],["رواتب|اجور|بدلات","g_sal","g_sal","56789"],["ايجار","g_rent","g_rent","56789"],
+  ["اهلاك|استهلاك","g_dep","g_dep","56789"],["تسويق|اعلان|دعايه","s_cons","s_cons","56789"],["تمويل|فوائد|عمولات بنكيه","fin","fin","56789"],
+  ["كهرباء|مياه","g_elec","g_elec","56789"],["هاتف|اتصالات|انترنت","g_tel","g_tel","56789"],["اتعاب","g_prof","g_prof","56789"],["رسوم","g_fees","g_fees","56789"],
+  ["تامينات اجتماعيه","g_gosi","g_gosi","56789"],["زكاه","zakat_exp","zakat_exp","56789"],
+];
+function mapByName(r){
+  const n = normAr((r.glName ? r.glName+" " : "") + r.name), d = String(r.gl)[0];
+  const hit = NAME_MAP.find(([k,,,ds]) => ds.includes(d) && k.split("|").some(w => n.includes(w)));
+  return hit ? (r.current >= 0 ? hit[1] : hit[2]) : null;
+}
+function mapHow(r){
+  const ov = S.fs.overrides;
+  if (r.sub && ov[r.gl+"/"+r.sub]) return {s:ov[r.gl+"/"+r.sub], how:"manual"};
+  if (ov[r.gl]) return {s:ov[r.gl], how:"manual"};
+  // a precise code rule (3+ digits) wins; otherwise the account name decides, then the first digit
+  const longest = DEFAULT_MAP.filter(([p]) => r.gl.startsWith(p)).reduce((m,[p]) => Math.max(m, p.length), 0);
+  let s = longest >= 3 ? mapRow(r, DEFAULT_MAP, null) : mapByName(r), how = "rule";
+  if (!s){ s = mapRow(r, DEFAULT_MAP, null); if (!longest) how = "guess"; }
+  if (s==="ppe_cost" && isDepAcc(r.glName || r.name)) s = "ppe_dep";
+  return {s, how};
+}
+let fsCache = null;
+function fsCompute(){
+  const key = (S.tb.meta.importedAt||"sample")+"|"+JSON.stringify(S.fs.overrides)+"|"+JSON.stringify(S.fs.adj);
+  if (fsCache && fsCache.key===key) return fsCache;
+  const rows = fsRows(), base = {}, src = {}, mov = {};
+  Object.keys(FS_SUB).forEach(k => { base[k] = 0; src[k] = []; mov[k] = {open:0, dr:0, cr:0}; });
+  rows.forEach(r => {
+    const m = mapHow(r); r.fs = m.s; r.how = m.how;
+    if (!m.s || !(m.s in base)) return;
+    base[m.s] += r.current; mov[m.s].open += r.prior; mov[m.s].dr += r.mdr; mov[m.s].cr += r.mcr;
+    if (Math.abs(r.current)>=0.005) src[m.s].push(r);
+  });
+  const v = {...base}, adjBySub = {};
+  S.fs.adj.forEach(a => (a.lines||[]).forEach(l => { if (!(l.sub in v)) return; const d = (+l.dr||0) - (+l.cr||0); v[l.sub] += d; adjBySub[l.sub] = (adjBySub[l.sub]||0) + d; }));
+  const prior = S.fs.prior || DRAFT_PRIOR;
+  const pv = {}; Object.keys(FS_SUB).forEach(k => pv[k] = +(prior.v||{})[k] || 0);
+  const st = statements(v), pst = statements(pv);
+  st.oci = -(v.reval - pv.reval); pst.oci = +prior.oci || 0;
+  fsCache = {key, rows, base, v, pv, src, mov, adjBySub, st, pst, prior};
+  return fsCache;
+}
+
+// ---------- financial statements: views ----------
+function fsHead(title){
+  const a = A(), F = fsCompute();
+  const warn = [];
+  if (S.tb.meta.sample) warn.push("الأرقام من ميزان تجريبي. استورد ميزان السنة من شاشة استيراد الميزان.");
+  if (Math.abs(F.st.diff)>=1) warn.push("المركز المالي غير متوازن بفرق "+fmt(F.st.diff)+". راجع ربط الحسابات وتوازن التسويات.");
+  const guess = F.rows.filter(r => r.how==="guess" && Math.abs(r.current)>=1).length;
+  if (guess) warn.push(guess+" حساب مربوط بالتخمين حسب أول رقم في الحساب. <a href=\"#\" data-go=\"map\">راجع ربطها</a>.");
+  return `<div class="row between"><h2>${title}</h2>
+    <div class="row">${S.downloads && typeof XLSX!=="undefined" ? `<button class="btn primary" data-act="fsxlsx">تحميل القوائم والإيضاحات (إكسيل)</button>` : ""}</div></div>
+    ${warn.length ? `<div class="banner">${warn.join("<br>")}</div>` : ""}
+    <p class="muted small">${esc(C().name||"")} · السنة المالية المنتهية في ${esc(C().fyEnd||"")} · ريال سعودي · المقارنة: ${esc(F.prior.source||F.prior.label||a.priorLabel)}</p>`;
+}
+function vFS(){
+  const a = A(), F = fsCompute(), st = F.st, pst = F.pst, w = S.ui.fsView;
+  const seg = `<div class="seg" role="group">${[["bs","المركز المالي"],["is","الدخل الشامل"],["eq","التغيرات في حقوق الملكية"],["notes","الإيضاحات"]].map(([k,l])=>`<button data-fsv="${k}" aria-pressed="${w===k}">${l}</button>`).join("")}</div>`;
+  const hd = `<thead><tr><th>البيان</th><th>إيضاح</th><th class="n">${esc(a.currentLabel)}</th><th class="n">${esc(F.prior.label||a.priorLabel)}</th></tr></thead>`;
+  const ln = (t, note, c, p, cls="") => `<tr class="${cls}"><td>${t}</td><td class="code">${esc(note||"")}</td><td class="n">${fmt(c)}</td><td class="n">${fmt(p)}</td></tr>`;
+  const sec = s => `<tr><td colspan="4"><b>${SEC_T[s]}</b></td></tr>`;
+  const lines = (s, X, Y) => FS_LINES.filter(l => l.sec===s && (Math.abs(X.p(l.id))>=0.5 || Math.abs(Y.p(l.id))>=0.5))
+    .map(l => ln(l.id==="re" ? "أرباح مبقاة" : esc(l.t), l.note, X.p(l.id) + (l.id==="re"?X.netIncome:0), Y.p(l.id) + (l.id==="re"?Y.netIncome:0))).join("");
+  let body = "";
+  if (w==="bs"){
+    body = `<div class="tbl" style="max-height:none"><table>${hd}<tbody>
+      ${sec("ca")}${lines("ca",st,pst)}${ln("مجموع الموجودات المتداولة","",st.ca,pst.ca,"tot")}
+      ${sec("nca")}${lines("nca",st,pst)}${ln("مجموع الموجودات غير المتداولة","",st.nca,pst.nca,"tot")}
+      ${ln("<b>مجموع الموجودات</b>","",st.assets,pst.assets,"tot")}
+      ${sec("cl")}${lines("cl",st,pst)}${ln("مجموع المطلوبات المتداولة","",st.cl,pst.cl,"tot")}
+      ${sec("ncl")}${lines("ncl",st,pst)}${ln("مجموع المطلوبات غير المتداولة","",st.ncl,pst.ncl,"tot")}
+      ${ln("مجموع المطلوبات","",st.liab,pst.liab,"tot")}
+      ${sec("eq")}${lines("eq",st,pst)}${ln("مجموع حقوق الملكية","",st.eq,pst.eq,"tot")}
+      ${ln("<b>مجموع المطلوبات وحقوق الملكية</b>","",st.liab+st.eq,pst.liab+pst.eq,"tot")}
+      ${Math.abs(st.diff)>=1||Math.abs(pst.diff)>=1 ? ln('<span class="c-crit">فرق التوازن</span>',"",st.diff,pst.diff) : ""}
+    </tbody></table></div>`;
+  } else if (w==="is"){
+    const L = (id, X) => X.p(id);
+    const op = X => X.gross + X.opex, pre = X => op(X) + L("fin",X) + L("invest",X) + L("othinc",X);
+    body = `<div class="tbl" style="max-height:none"><table>${hd}<tbody>
+      ${ln("المبيعات","",L("sales",st),L("sales",pst))}${ln("تكلفة المبيعات","",L("cogs",st),L("cogs",pst))}
+      ${ln("مجمل الربح","",st.gross,pst.gross,"tot")}
+      ${ln("مصروفات بيعية وتسويقية","17",L("sell",st),L("sell",pst))}${ln("مصروفات عمومية وإدارية","18",L("gna",st),L("gna",pst))}
+      ${ln("الربح من العمليات","",op(st),op(pst),"tot")}
+      ${ln("مصاريف تمويلية","",L("fin",st),L("fin",pst))}${ln("إيرادات استثمارات عقارية","19",L("invest",st),L("invest",pst))}${ln("إيرادات ومصروفات أخرى","20",L("othinc",st),L("othinc",pst))}
+      ${ln("صافي الربح قبل الزكاة","",pre(st),pre(pst),"tot")}
+      ${ln("الزكاة","14",L("zakexp",st),L("zakexp",pst))}
+      ${ln("<b>صافي ربح السنة</b>","",st.netIncome,pst.netIncome,"tot")}
+      <tr><td colspan="4"><b>الدخل الشامل الآخر</b></td></tr>
+      ${ln("فائض إعادة تقييم الممتلكات","",st.oci,pst.oci)}
+      ${ln("<b>إجمالي الدخل الشامل للسنة</b>","",st.netIncome+st.oci,pst.netIncome+pst.oci,"tot")}
+    </tbody></table></div>
+    <p class="muted small">الأهمية النسبية المقترحة (1% من صافي المبيعات): ${fmt(L("sales",st)*0.01)}</p>`;
+  } else if (w==="eq"){
+    const cols = ["cap","reserve","re","reval"], names = ["رأس المال","احتياطي نظامي","أرباح مبقاة","فائض إعادة التقييم","الإجمالي"];
+    const open = {cap:pst.p("cap"), reserve:pst.p("reserve"), re:pst.p("re")+pst.netIncome, reval:pst.p("reval")};
+    const close = {cap:st.p("cap"), reserve:st.p("reserve"), re:st.p("re")+st.netIncome, reval:st.p("reval")};
+    const toRes = close.reserve - open.reserve;
+    const mv = [["صافي ربح السنة", {re:st.netIncome}], ["الدخل الشامل الآخر", {reval:st.oci}], ["المحول إلى الاحتياطي النظامي", {reserve:toRes, re:-toRes}]];
+    const known = {cap:0, reserve:toRes, re:st.netIncome-toRes, reval:st.oci};
+    const other = {}; cols.forEach(c => other[c] = close[c] - open[c] - known[c]);
+    if (cols.some(c => Math.abs(other[c])>=1)) mv.push(["حركات أخرى (توزيعات، زيادة رأس مال، تسويات سنوات سابقة)", other]);
+    const row = (t, o, cls="") => `<tr class="${cls}"><td>${t}</td>${cols.map(c=>`<td class="n">${fmt(o[c]||0)}</td>`).join("")}<td class="n">${fmt(cols.reduce((s,c)=>s+(o[c]||0),0))}</td></tr>`;
+    body = `<div class="tbl" style="max-height:none"><table><thead><tr><th>البيان</th>${names.map(n=>`<th class="n">${n}</th>`).join("")}</tr></thead><tbody>
+      ${row("الرصيد في بداية السنة", open, "tot")}${mv.map(([t,o])=>row(t,o)).join("")}${row("الرصيد في نهاية السنة", close, "tot")}
+    </tbody></table></div>
+    <p class="muted small">المحول للاحتياطي النظامي محسوب من حركة حساب الاحتياطي. النظام يطلب تحويل 10% من صافي الربح حتى يبلغ الاحتياطي 30% من رأس المال؛ المطلوب هذه السنة تقريبًا ${fmt(Math.max(0, Math.min(st.netIncome*0.1, close.cap*0.3 - open.reserve)))}.</p>`;
+  } else body = vNotes(F);
+  return fsHead("القوائم المالية") + `<div class="row between">${seg}
+    <div class="row">${S.ui.confirm==="rollover" ? `<button class="btn sm danger" data-act="rollover">تأكيد: اجعل أرقام ${esc(a.currentLabel)} هي المقارنة</button>` : `<button class="btn sm link" data-act="ask" data-c="rollover">ترحيل الأرقام الحالية كأرقام مقارنة للسنة القادمة</button>`}</div></div>` + body;
+}
+function vNotes(F){
+  const a = A(), ed = S.ui.editPrior;
+  const notes = FS_LINES.filter(l => l.subs.length>1 || l.note).filter(l => l.subs.some(([id]) => Math.abs(F.v[id])>=0.5 || Math.abs(F.pv[id])>=0.5));
+  return `<p class="muted">كل بند بتفاصيله وأرقام المقارنة. افتح أي سطر لترى الحسابات اللي تكوّنه. ${ed?"اكتب أرقام المقارنة بالموجب كما تظهر في القوائم.":""}
+    <button class="btn sm link" data-act="editprior">${ed?"إنهاء تعديل أرقام المقارنة":"تعديل أرقام المقارنة"}</button></p>
+  ${notes.map(l => {
+    const tc = l.subs.reduce((s,[id])=>s+pres(id,F.v[id]),0), tp = l.subs.reduce((s,[id])=>s+pres(id,F.pv[id]),0);
+    return `<div class="panel"><h3>${l.note?"إيضاح "+esc(l.note)+" - ":""}${esc(l.t)}</h3>
+    <div class="tbl" style="max-height:none"><table><thead><tr><th>البند</th><th class="n">${esc(a.currentLabel)}</th><th class="n">${esc(F.prior.label||a.priorLabel)}</th></tr></thead><tbody>
+    ${l.subs.filter(([id]) => ed || Math.abs(F.v[id])>=0.5 || Math.abs(F.pv[id])>=0.5).map(([id,t]) => {
+      const src = F.src[id].slice().sort((x,y)=>Math.abs(y.current)-Math.abs(x.current)), adj = F.adjBySub[id];
+      return `<tr><td>${src.length||adj ? `<details><summary>${esc(t)}</summary><div class="muted small">${src.slice(0,40).map(r=>esc(r.gl+(r.sub?"/"+r.sub:"")+" "+r.name)+": "+fmt(pres(id,r.current))).join("<br>")}${src.length>40?"<br>و"+(src.length-40)+" حساب آخر":""}${adj?"<br><b>تسويات: "+fmt(pres(id,adj))+"</b>":""}</div></details>` : esc(t)}</td>
+        <td class="n">${fmt(pres(id,F.v[id]))}</td>
+        <td class="n">${ed ? `<input type="number" step="1" data-prior="${id}" value="${Math.round(pres(id,F.pv[id]))}" style="width:130px">` : fmt(pres(id,F.pv[id]))}</td></tr>`;
+    }).join("")}
+    <tr class="tot"><td>الإجمالي</td><td class="n">${fmt(tc)}</td><td class="n">${fmt(tp)}</td></tr></tbody></table></div>
+    ${l.id==="ppe" ? `<a href="#" data-go="fa" class="small">جدول حركة الممتلكات والآلات والمعدات</a>` : ""}</div>`;
+  }).join("")}`;
+}
+
+function vMap(){
+  const F = fsCompute(), u = S.ui, lvl = hasSubs() ? u.mapLevel : "gl";
+  let rows;
+  if (lvl==="gl"){
+    const m = new Map();
+    F.rows.forEach(r => { let g = m.get(r.gl); if (!g){ g = {key:r.gl, gl:r.gl, sub:"", name:r.glName||r.name, current:0, subs:new Set(), hows:new Set()}; m.set(r.gl, g); } g.current += r.current; if (r.fs) g.subs.add(r.fs); g.hows.add(r.how); });
+    rows = [...m.values()].map(g => ({...g, fsList:[...g.subs], how: S.fs.overrides[g.gl] ? "manual" : g.hows.has("guess") ? "guess" : g.hows.has("manual") ? "mixed" : "rule"}));
+  } else rows = F.rows.map(r => ({...r, fsList:[r.fs], key:r.gl+(r.sub?"/"+r.sub:"")}));
+  const q = norm(u.mapQ);
+  if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")).includes(q) || (r.gl+"/"+r.sub).includes(q));
+  if (u.mapHow!=="all") rows = rows.filter(r => u.mapHow==="manual" ? (r.how==="manual"||r.how==="mixed") : r.how===u.mapHow);
+  if (u.mapLine) rows = rows.filter(r => r.fsList.some(s => FS_SUB[s] && FS_SUB[s].line===u.mapLine));
+  const shown = rows.slice(0, 400);
+  const howChip = h => ({manual:'<span class="chip c-info">يدوي</span>', mixed:'<span class="chip c-info">فيه تعديل يدوي</span>', guess:'<span class="chip c-warn">تخمين</span>', rule:'<span class="chip c-mute">تلقائي</span>'})[h];
+  return `<div class="row between"><h2>تبويب الحسابات على بنود القوائم</h2>
+    <div class="row">${hasSubs() ? `<div class="seg" role="group"><button data-mlevel="gl" aria-pressed="${lvl==="gl"}">الحساب العام</button><button data-mlevel="sub" aria-pressed="${lvl==="sub"}">الحساب التحليلي</button></div>` : ""}
+    <input type="text" id="mapQ" placeholder="ابحث باسم الحساب أو رقمه" value="${esc(u.mapQ)}">
+    <select id="mapHow"><option value="all">كل الحسابات</option><option value="guess" ${u.mapHow==="guess"?"selected":""}>المربوطة بالتخمين</option><option value="manual" ${u.mapHow==="manual"?"selected":""}>المعدلة يدويًا</option></select>
+    <select id="mapLine"><option value="">كل البنود</option>${FS_LINES.map(l=>`<option value="${l.id}" ${u.mapLine===l.id?"selected":""}>${esc(l.t)}</option>`).join("")}</select></div></div>
+  <p class="muted">زي عمود التصنيف في شيت المراجع: كل حساب مربوط ببند في القوائم والإيضاح. الحسابات التحليلية تتوزع حسب رصيدها، فالعميل الدائن يروح لعملاء دفعات مقدمة والمورد المدين لموردين مدينين تلقائيًا. غيّر الربط على مستوى الحساب العام (يطبق على كل التحليلي تحته) أو على حساب تحليلي واحد.</p>
+  <div class="tbl"><table><thead><tr><th>الرقم</th><th>اسم الحساب</th><th class="n">الرصيد ${esc(A().currentLabel)}</th><th>البند في القوائم</th><th>الربط</th><th></th></tr></thead><tbody>
+  ${shown.map(r => {
+    const k = lvl==="gl" ? r.gl : r.key, editing = u.mapEdit===k, ov = S.fs.overrides[k];
+    return `<tr><td class="code">${esc(lvl==="gl"?r.gl:r.gl+(r.sub?" / "+r.sub:""))}</td><td>${esc(r.name)}${lvl==="sub"&&r.glName?`<div class="muted small">${esc(r.glName)}</div>`:""}</td>
+      <td class="n">${fmt(r.current)}</td>
+      <td>${editing ? `<select data-mapset="${esc(k)}"><option value="">اختر البند</option>${subOptions(ov||"")}</select>` : r.fsList.map(s => esc(subLabel(s))).join("<br>")}</td>
+      <td>${howChip(r.how)}</td>
+      <td style="white-space:nowrap">${editing ? `<button class="btn sm link" data-act="mapcancel">إلغاء</button>` : `<button class="btn sm link" data-act="mapedit" data-id="${esc(k)}">تغيير</button>`}${ov ? `<button class="btn sm link" data-act="mapreset" data-id="${esc(k)}">رجوع للتلقائي</button>` : ""}</td></tr>`;
+  }).join("")}</tbody></table></div>
+  ${rows.length>shown.length ? `<p class="muted small">يظهر أول ${shown.length} من ${rows.length}. استخدم البحث أو الفلاتر.</p>` : ""}`;
+}
+
+function vAdj(){
+  const F = fsCompute(), d = S.ui.adj, a = A();
+  const tdr = d.lines.reduce((s,l)=>s+(+l.dr||0),0), tcr = d.lines.reduce((s,l)=>s+(+l.cr||0),0);
+  const ok = tdr>0 && Math.abs(tdr-tcr)<0.005 && d.lines.every(l => !(+l.dr||+l.cr) || l.sub) && d.desc.trim();
+  const list = S.fs.adj.slice().sort((x,y)=>(x.n||0)-(y.n||0));
+  return `<div class="row between"><h2>التسويات وإعادة التبويب</h2></div>
+  <p class="muted">زي عمودي "التسويات" و"إعادة التبويب" في شيت المراجع: القيود هنا تعدل أرقام القوائم فقط ولا تدخل الدفاتر. سجّل كل قيد تقترحه أنت أو يطلبه المراجع، وهيظهر أثره في الإيضاحات وفي ملف الإكسيل.</p>
+  <div class="tbl" style="max-height:none"><table><thead><tr><th>#</th><th>البيان</th><th>النوع</th><th>البند</th><th class="n">مدين</th><th class="n">دائن</th><th></th></tr></thead><tbody>
+  ${list.length ? list.map(x => (x.lines||[]).map((l,i) => `<tr>${i===0?`<td rowspan="${x.lines.length}">${x.n||""}</td><td rowspan="${x.lines.length}">${esc(x.desc)}</td><td rowspan="${x.lines.length}">${x.type==="reclass"?"إعادة تبويب":"تسوية"}</td>`:""}
+      <td>${esc(subLabel(l.sub))}</td><td class="n">${fmt(+l.dr||0)}</td><td class="n">${fmt(+l.cr||0)}</td>
+      ${i===0?`<td rowspan="${x.lines.length}">${S.ui.confirm==="adj:"+x.id ? `<button class="btn sm danger" data-act="deladj" data-id="${esc(x.id)}">تأكيد الحذف</button>` : `<button class="btn sm link" data-act="ask" data-c="adj:${esc(x.id)}">حذف</button>`}</td>`:""}</tr>`).join("")).join("")
+    : `<tr><td colspan="7" class="muted">لا توجد قيود بعد.</td></tr>`}
+  </tbody></table></div>
+  <div class="panel"><h3>قيد جديد</h3>
+    <div class="row"><span class="muted small">قيود شائعة:</span>${ADJ_PRESETS.map((p,i)=>`<button class="btn sm" data-act="adjpreset" data-i="${i}">${esc(p[0])}</button>`).join("")}</div>
+    <div class="row"><label class="f" style="flex:1">البيان<input type="text" id="adj-desc" value="${esc(d.desc)}"></label>
+      <label class="f">النوع<select id="adj-type"><option value="adj" ${d.type==="adj"?"selected":""}>تسوية</option><option value="reclass" ${d.type==="reclass"?"selected":""}>إعادة تبويب</option></select></label></div>
+    <div class="tbl" style="max-height:none"><table><thead><tr><th>البند</th><th class="n">مدين</th><th class="n">دائن</th><th>الرصيد الحالي للبند</th><th></th></tr></thead><tbody>
+    ${d.lines.map((l,i) => `<tr><td><select data-adjl="${i}" data-f="sub"><option value="">اختر البند</option>${subOptions(l.sub)}</select></td>
+      <td><input type="number" step="0.01" data-adjl="${i}" data-f="dr" value="${esc(l.dr)}" style="width:130px"></td>
+      <td><input type="number" step="0.01" data-adjl="${i}" data-f="cr" value="${esc(l.cr)}" style="width:130px"></td>
+      <td class="n">${l.sub ? fmt(pres(l.sub, F.v[l.sub])) : ""}</td>
+      <td>${d.lines.length>2?`<button class="btn sm link" data-act="adjrm" data-i="${i}">حذف السطر</button>`:""}</td></tr>`).join("")}
+    <tr class="tot"><td>الإجمالي ${Math.abs(tdr-tcr)>=0.005?'<span class="chip c-crit">غير متوازن</span>':""}</td><td class="n">${fmt(tdr)}</td><td class="n">${fmt(tcr)}</td><td></td><td></td></tr></tbody></table></div>
+    <div class="row"><button class="btn" data-act="adjadd">إضافة سطر</button><button class="btn primary" data-act="adjsave" ${ok?"":"disabled"}>حفظ القيد</button></div>
+  </div>`;
+}
+
+function fsChecks(){
+  const F = fsCompute(), st = F.st, out = [], sums = tbSums();
+  const add = (ok, t, d, warnOnly) => out.push({c: ok ? "c-ok" : warnOnly ? "c-warn" : "c-crit", l: ok ? "مطابق" : warnOnly ? "يحتاج مراجعة" : "فرق", t, d});
+  add(Math.abs(sums.current)<1 && Math.abs(sums.prior)<1, "توازن ميزان المراجعة", `مجموع الأرصدة آخر المدة ${fmt(sums.current)} وأول المدة ${fmt(sums.prior)}.`);
+  add(Math.abs(st.diff)<1, "توازن قائمة المركز المالي بعد الربط والتسويات", `الموجودات ${fmt(st.assets)} مقابل المطلوبات وحقوق الملكية ${fmt(st.liab+st.eq)}.`);
+  const guess = F.rows.filter(r => r.how==="guess" && Math.abs(r.current)>=1);
+  add(!guess.length, "كل الحسابات مربوطة ببنود القوائم", guess.length ? guess.length+" حساب مربوط بالتخمين، أكبرها: "+guess.sort((x,y)=>Math.abs(y.current)-Math.abs(x.current)).slice(0,3).map(r=>esc(r.name)+" "+fmt(r.current)).join("، ") : "لا يوجد حساب بالتخمين.", true);
+  const depExp = F.base.g_dep, depCr = F.mov.ppe_dep.cr;
+  add(Math.abs(depExp-depCr)<1, "مصروف الاستهلاك مقابل حركة مجمع الاستهلاك", `المصروف في قائمة الدخل ${fmt(depExp)} · المضاف لمجمع الاستهلاك (دائن) ${fmt(depCr)} · الفرق ${fmt(depExp-depCr)}. المستبعد من المجمع (مدين) ${fmt(F.mov.ppe_dep.dr)}.`);
+  const eExp = F.base.g_eosb, eCr = F.mov.eosb.cr, ePaid = F.mov.eosb.dr;
+  add(Math.abs(eExp-eCr)<1, "مصروف نهاية الخدمة مقابل حركة المخصص", `المصروف ${fmt(eExp)} · المكوّن في المخصص (دائن) ${fmt(eCr)} · المدفوع من المخصص (مدين) ${fmt(ePaid)} · الفرق ${fmt(eExp-eCr)}. المراجع بيطلب كشف احتساب لكل موظف يطابق الرصيد ${fmt(-F.v.eosb)}.`);
+  add(Math.abs(F.v.zakat)>=1 && Math.abs(F.v.zakat_exp)>=1, "مخصص الزكاة للسنة", `مصروف الزكاة ${fmt(F.v.zakat_exp)} · رصيد المخصص ${fmt(-F.v.zakat)}. لو لسه ما اتحسبتش أضفها كتسوية.`, true);
+  const costDisp = F.mov.ppe_cost.cr;
+  add(!(costDisp>=1 && Math.abs(F.v.gain_ppe)<1), "أرباح/خسائر استبعاد الأصول", `تكلفة مستبعدة ${fmt(costDisp)} ومجمع مستبعد ${fmt(F.mov.ppe_dep.dr)}، وأرباح الاستبعاد في قائمة الدخل ${fmt(-F.v.gain_ppe)}.`, true);
+  const neg = FS_LINES.filter(l => BS_SECS.includes(l.sec) && l.id!=="re" && st.p(l.id) < -1);
+  add(!neg.length, "بنود المركز المالي بإشارة سالبة", neg.length ? neg.map(l => esc(l.t)+" "+fmt(st.p(l.id))).join("، ") : "لا يوجد بند سالب.", true);
+  const recl = ["custadv","supadv"].map(s => esc(FS_SUB[s].t)+" "+fmt(Math.abs(F.v[s]))).join(" · ");
+  out.push({c:"c-info", l:"معلومة", t:"الأرصدة المعاكسة اللي اتنقلت تلقائيًا", d:recl+`. التفاصيل في شاشة إعادة التبويب.`});
+  const unb = S.fs.adj.filter(x => Math.abs((x.lines||[]).reduce((s,l)=>s+(+l.dr||0)-(+l.cr||0),0))>=0.005);
+  add(!unb.length, "توازن قيود التسويات", unb.length ? unb.length+" قيد غير متوازن." : S.fs.adj.length+" قيد كلها متوازنة.");
+  out.push({c:"c-info", l:"معلومة", t:"الأهمية النسبية", d:`1% من صافي المبيعات = ${fmt(st.p("sales")*0.01)}. أي فرق أقل منها غالبًا لن يعدله المراجع.`});
+  return out;
+}
+function vChecks(){
+  const ch = fsChecks();
+  return `<div class="row between"><h2>فحوصات المطابقة</h2></div>
+  <p class="muted">الفحوصات اللي بيعملها المراجع على الميزان قبل ما يبدأ. اقفل كل فرق أو جهّز تفسيره قبل تسليم الميزان.</p>
+  <div class="tbl" style="max-height:none"><table><thead><tr><th>الفحص</th><th>النتيجة</th><th>التفاصيل</th></tr></thead><tbody>
+  ${ch.map(c => `<tr><td><b>${c.t}</b></td><td><span class="chip ${c.c}">${c.l}</span></td><td>${c.d}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+// ---------- fixed assets ----------
+function rateFor(name){ const n = norm(name); const f = DEFAULT_RATES.find(([k]) => k.split("|").some(x => n.includes(norm(x)))); return f ? f[1] : ""; }
+function faClasses(){
+  const F = fsCompute(), m = new Map();
+  F.rows.filter(r => r.fs==="ppe_cost" || r.fs==="ppe_dep").forEach(r => {
+    const k = r.gl.length>=7 ? r.gl.slice(0,5) : r.gl;
+    let c = m.get(k);
+    if (!c){ c = {k, name:"", cost:{open:0,add:0,disp:0,close:0}, dep:{open:0,add:0,disp:0,close:0}, costRows:[]}; m.set(k, c); }
+    if (r.fs==="ppe_cost"){
+      c.cost.open += r.prior; c.cost.add += r.mdr; c.cost.disp += r.mcr; c.cost.close += r.current; c.costRows.push(r);
+      if (!c.name) c.name = String(r.glName||r.name).replace(/القيمة الدفترية( لل| ل)?/,"").trim();
+    } else { c.dep.open -= r.prior; c.dep.add += r.mcr; c.dep.disp += r.mdr; c.dep.close -= r.current; if (!c.name) c.name = String(r.glName||r.name).replace(/مجمع (اهلاك|إهلاك|استهلاك)/,"").trim(); }
+  });
+  return [...m.values()].map(c => ({...c, rate: S.fs.rates[c.k] ?? rateFor(c.name)}));
+}
+function vFA(){
+  const cls = faClasses(), a = A();
+  const T = k => { const [a,b] = k.split(" "); return cls.reduce((s,c)=>s+c[a][b],0); };
+  const adds = cls.flatMap(c => c.costRows.filter(r => r.mdr>=1).map(r => ({...r, cls:c.name})));
+  return `<div class="row between"><h2>الممتلكات والآلات والمعدات</h2></div>
+  <p class="muted">جدول الحركة (إيضاح 10) محسوب من أعمدة الميزان: أول المدة، الإضافات (مدين)، الاستبعادات (دائن)، آخر المدة. نسب الإهلاك من السياسة المحاسبية، وتقدر تعدلها.</p>
+  <div class="tbl" style="max-height:none"><table><thead><tr><th>الفئة</th><th>نسبة الإهلاك</th><th class="n">التكلفة أول المدة</th><th class="n">إضافات</th><th class="n">استبعادات</th><th class="n">التكلفة آخر المدة</th><th class="n">مجمع أول المدة</th><th class="n">إهلاك السنة</th><th class="n">مجمع المستبعد</th><th class="n">مجمع آخر المدة</th><th class="n">صافي ${esc(a.currentLabel)}</th><th class="n">صافي ${esc(a.priorLabel)}</th></tr></thead><tbody>
+  ${cls.map(c => `<tr><td>${esc(c.name)}</td><td><input type="text" data-rate="${esc(c.k)}" value="${esc(c.rate)}" style="width:90px"></td>
+    <td class="n">${fmt(c.cost.open)}</td><td class="n">${fmt(c.cost.add)}</td><td class="n">${fmt(-c.cost.disp)}</td><td class="n">${fmt(c.cost.close)}</td>
+    <td class="n">${fmt(c.dep.open)}</td><td class="n">${fmt(c.dep.add)}</td><td class="n">${fmt(-c.dep.disp)}</td><td class="n">${fmt(c.dep.close)}</td>
+    <td class="n">${fmt(c.cost.close-c.dep.close)}</td><td class="n">${fmt(c.cost.open-c.dep.open)}</td></tr>`).join("")}
+  <tr class="tot"><td>الإجمالي</td><td></td><td class="n">${fmt(T("cost open"))}</td><td class="n">${fmt(T("cost add"))}</td><td class="n">${fmt(-T("cost disp"))}</td><td class="n">${fmt(T("cost close"))}</td>
+    <td class="n">${fmt(T("dep open"))}</td><td class="n">${fmt(T("dep add"))}</td><td class="n">${fmt(-T("dep disp"))}</td><td class="n">${fmt(T("dep close"))}</td>
+    <td class="n">${fmt(T("cost close")-T("dep close"))}</td><td class="n">${fmt(T("cost open")-T("dep open"))}</td></tr></tbody></table></div>
+  <div class="panel"><h3>إضافات السنة وفواتيرها</h3>
+    <p class="muted">المراجع بيطلب فواتير كل إضافة (طلب الأصول الثابتة). ارفع فاتورة الشراء وعقد أو محضر الاستلام لكل إضافة.</p>
+    ${adds.length ? adds.map(r => { const h = S.fs.faDocs[r.key] || {files:[], notes:""}; const up = S.ui.uploading["fa:"+r.key];
+      return `<div class="req" style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <div class="row between"><div><b>${esc(r.cls)}</b> <span class="muted small">${esc(r.gl+(r.sub?"/"+r.sub:"")+" "+r.name)}</span></div><div class="n"><b>${fmt(r.mdr)}</b></div></div>
+        ${fileList("fa", r.key, h.files||[])}
+        <div class="row">${S.assets ? `<label class="btn sm">${up?"جاري الرفع…":"إرفاق فاتورة"}<input type="file" multiple hidden data-upload="fa" data-id="${esc(r.key)}"></label>` : ""}
+          <input type="text" data-fanote="${esc(r.key)}" placeholder="المورد، رقم الفاتورة، ملاحظة" value="${esc(h.notes||"")}" style="flex:1"></div></div>`; }).join("")
+      : `<p class="muted">لا توجد إضافات في الميزان الحالي.</p>`}
+  </div>`;
+}
+
+// ---------- accounting policies ----------
+function policyList(){ return DEFAULT_POLICIES.map(p => S.fs.policies[p.id] ? {...p, ...S.fs.policies[p.id], edited:true} : p).concat(Object.values(S.fs.policies).filter(p => !DEFAULT_POLICIES.some(d => d.id===p.id))); }
+function ratesText(){ return faClasses().filter(c => c.rate).map(c => "• "+c.name+": "+c.rate).join("\n") || "........"; }
+function policyText(p){ return fillLetter(p.body.replace(/\{نسب_الإهلاك\}/g, ratesText()), {}); }
+function vPolicies(){
+  const ps = policyList(), open = S.ui.polOpen;
+  return `<div class="row between"><h2>السياسات المحاسبية والإيضاحات النصية</h2>
+    <div class="row">${S.downloads && window.JSZip ? `<button class="btn primary" data-act="poldocx">تحميل Word</button>` : ""}<button class="btn" data-act="poladd">إضافة قسم</button></div></div>
+  <p class="muted">النص الأساسي للسياسات المحاسبية للمنشآت الصغيرة والمتوسطة. اسم الشركة والسجل والعنوان بيتعبّوا من الإعدادات، ونسب الإهلاك من شاشة الأصول الثابتة. عدّل أي قسم لو اتغيرت سياسة أو نشاط.</p>
+  ${ps.map(p => `<div class="req"><div class="req-h" data-act="polopen" data-id="${esc(p.id)}" style="grid-template-columns:minmax(0,1fr) auto"><b>${esc(p.t)}</b>${p.edited?'<span class="chip c-info">معدّل</span>':""}</div>
+    ${open===p.id ? `<div class="req-b">
+      <label class="f">العنوان<input type="text" data-polt="${esc(p.id)}" value="${esc(p.t)}"></label>
+      <label class="f">النص (السطر بين ** و ** عنوان عريض)<textarea data-polb="${esc(p.id)}" rows="16">${esc(p.body)}</textarea></label>
+      <div class="row">${p.edited && DEFAULT_POLICIES.some(d=>d.id===p.id) ? `<button class="btn sm link" data-act="polreset" data-id="${esc(p.id)}">استرجاع النص الأصلي</button>` : ""}
+        ${!DEFAULT_POLICIES.some(d=>d.id===p.id) ? `<button class="btn sm link" data-act="poldel" data-id="${esc(p.id)}">حذف القسم</button>` : ""}</div>
+      <div class="preview">${esc(policyText(p).replace(/\*\*/g,""))}</div></div>` : ""}</div>`).join("")}`;
+}
+
+// ---------- financial statements: Excel ----------
+async function exportFS(){
+  const a = A(), F = fsCompute(), st = F.st, pst = F.pst, wb = XLSX.utils.book_new(), pl = F.prior.label||a.priorLabel;
+  wb.Workbook = {Views:[{RTL:true}]};
+  const add = (n, d, widths) => { const ws = XLSX.utils.aoa_to_sheet(d); ws["!cols"] = widths.map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, ws, n); };
+  const R = v => Math.round(v);
+  const bs = [["البيان","إيضاح",a.currentLabel,pl]];
+  const secRows = s => FS_LINES.filter(l => l.sec===s).forEach(l => { const c = st.p(l.id)+(l.id==="re"?st.netIncome:0), p = pst.p(l.id)+(l.id==="re"?pst.netIncome:0); if (Math.abs(c)>=0.5||Math.abs(p)>=0.5) bs.push([l.id==="re"?"أرباح مبقاة":l.t, l.note, R(c), R(p)]); });
+  [["ca","مجموع الموجودات المتداولة",x=>x.ca],["nca","مجموع الموجودات غير المتداولة",x=>x.nca],["cl","مجموع المطلوبات المتداولة",x=>x.cl],["ncl","مجموع المطلوبات غير المتداولة",x=>x.ncl],["eq","مجموع حقوق الملكية",x=>x.eq]].forEach(([s,t,f]) => {
+    bs.push([SEC_T[s]]); secRows(s); bs.push([t,"",R(f(st)),R(f(pst))]);
+    if (s==="nca") bs.push(["مجموع الموجودات","",R(st.assets),R(pst.assets)]);
+    if (s==="ncl") bs.push(["مجموع المطلوبات","",R(st.liab),R(pst.liab)]);
+  });
+  bs.push(["مجموع المطلوبات وحقوق الملكية","",R(st.liab+st.eq),R(pst.liab+pst.eq)]);
+  add("المركز المالي", bs, [44,8,16,16]);
+  const L = (id,X) => X.p(id), op = X => X.gross+X.opex, pre = X => op(X)+L("fin",X)+L("invest",X)+L("othinc",X);
+  add("الدخل الشامل", [["البيان","إيضاح",a.currentLabel,pl],
+    ["المبيعات","",R(L("sales",st)),R(L("sales",pst))],["تكلفة المبيعات","",R(L("cogs",st)),R(L("cogs",pst))],["مجمل الربح","",R(st.gross),R(pst.gross)],
+    ["مصروفات بيعية وتسويقية","17",R(L("sell",st)),R(L("sell",pst))],["مصروفات عمومية وإدارية","18",R(L("gna",st)),R(L("gna",pst))],["الربح من العمليات","",R(op(st)),R(op(pst))],
+    ["مصاريف تمويلية","",R(L("fin",st)),R(L("fin",pst))],["إيرادات استثمارات عقارية","19",R(L("invest",st)),R(L("invest",pst))],["إيرادات ومصروفات أخرى","20",R(L("othinc",st)),R(L("othinc",pst))],
+    ["صافي الربح قبل الزكاة","",R(pre(st)),R(pre(pst))],["الزكاة","14",R(L("zakexp",st)),R(L("zakexp",pst))],["صافي ربح السنة","",R(st.netIncome),R(pst.netIncome)],
+    ["فائض إعادة تقييم الممتلكات","",R(st.oci),R(pst.oci)],["إجمالي الدخل الشامل","",R(st.netIncome+st.oci),R(pst.netIncome+pst.oci)]], [44,8,16,16]);
+  const nt = [["الإيضاح","البند","البند الفرعي",a.currentLabel,pl,"منها تسويات"]];
+  FS_LINES.forEach(l => l.subs.forEach(([id,t]) => { if (Math.abs(F.v[id])>=0.5||Math.abs(F.pv[id])>=0.5) nt.push([l.note, l.t, t, R(pres(id,F.v[id])), R(pres(id,F.pv[id])), F.adjBySub[id]?R(pres(id,F.adjBySub[id])):""]); }));
+  add("الإيضاحات", nt, [8,40,40,16,16,14]);
+  add("ربط الحسابات", [["الحساب العام","اسم الحساب العام","التحليلي","الاسم","الرصيد","التصنيف الرئيسي","البند","البند الفرعي","الإيضاح","طريقة الربط"]]
+    .concat(F.rows.filter(r => Math.abs(r.current)>=0.005).map(r => { const s = FS_SUB[r.fs], l = s && lineOf(s.line); return [r.gl, r.glName, r.sub, r.name, r.current, l ? (BS_SECS.includes(l.sec)?"المركز المالي":"قائمة الدخل") : "", l?l.t:"", s?s.t:"", l?l.note:"", {manual:"يدوي",guess:"تخمين",rule:"تلقائي"}[r.how]]; })), [12,30,10,36,16,14,36,30,8,10]);
+  if (S.fs.adj.length){
+    const ad = [["#","البيان","النوع","البند","مدين","دائن"]];
+    S.fs.adj.slice().sort((x,y)=>(x.n||0)-(y.n||0)).forEach(x => (x.lines||[]).forEach(l => ad.push([x.n, x.desc, x.type==="reclass"?"إعادة تبويب":"تسوية", subLabel(l.sub), +l.dr||0, +l.cr||0])));
+    add("التسويات", ad, [5,40,12,44,14,14]);
+  }
+  const cls = faClasses();
+  if (cls.length) add("الممتلكات والمعدات", [["الفئة","نسبة الإهلاك","التكلفة أول المدة","إضافات","استبعادات","التكلفة آخر المدة","مجمع أول المدة","إهلاك السنة","مجمع المستبعد","مجمع آخر المدة","صافي القيمة الدفترية"]]
+    .concat(cls.map(c => [c.name, c.rate, R(c.cost.open), R(c.cost.add), R(-c.cost.disp), R(c.cost.close), R(c.dep.open), R(c.dep.add), R(-c.dep.disp), R(c.dep.close), R(c.cost.close-c.dep.close)])), [30,12,14,14,14,14,14,14,14,14,14]);
+  add("فحوصات المطابقة", [["الفحص","النتيجة","التفاصيل"]].concat(fsChecks().map(c => [c.t, c.l, c.d.replace(/<[^>]+>/g,"")])), [44,14,90]);
+  await saveFile("القوائم المالية "+(C().name||"")+" "+a.currentLabel+".xlsx", XLSX.write(wb, {bookType:"xlsx", type:"array"}));
+}
+
+// ---------- tabs ----------
+const TABS = [
+  ["summary","الملخص"],["requests","طلبات المراجع"],["compare","الميزان والتنبيهات"],["reclass","إعادة التبويب"],
+  ["map","تبويب الحسابات"],["adj","التسويات"],["fs","القوائم المالية"],["checks","فحوصات المطابقة"],["fa","الأصول الثابتة"],["policies","السياسات المحاسبية"],
+  ["docs","المستندات الرسمية"],["letters","الخطابات والنماذج"],["import","استيراد الميزان"],["settings","الإعدادات"]
+];
+function renderTabs(){
+  const open = S.requests.filter(r => !["ready","sent","na"].includes(r.status)).length;
+  const exp = S.docs.filter(d => { const s = docStatus(d); return s.days!=null && s.days<=60; }).length;
+  $("#tabs").innerHTML = TABS.map(([v,l]) => v
+    ? `<button role="tab" data-v="${v}" aria-selected="${S.view===v}">${l}${v==="requests"&&open?`<span class="cnt">${open}</span>`:""}${v==="docs"&&exp?`<span class="cnt">${exp}</span>`:""}</button>`
+    : `<button role="tab" disabled>${l}<small>قريبًا</small></button>`).join("");
+}
+
+function render(){
+  renderTabs();
+  $("#sampleTag").hidden = !S.tb.meta.sample;
+  $("#sub").textContent = (C().name ? C().name+" · " : "") + "السنة المالية المنتهية في " + (C().fyEnd||"");
+  const v = {summary:vSummary, requests:vRequests, compare:vCompare, reclass:vReclass, docs:vDocs, letters:vLetters, import:vImport, settings:vSettings, map:vMap, adj:vAdj, fs:vFS, checks:vChecks, fa:vFA, policies:vPolicies}[S.view] || vSummary;
+  $("#app").innerHTML = (S.capsReady && !S.db ? `<div class="banner">الحفظ غير متاح في هذه الشاشة، والتعديلات مؤقتة. افتح البرنامج من رابطه في Claude ليتم الحفظ.</div>` : "") + v();
+}
+
+// ---------- views ----------
+function vSummary(){
+  const rq = S.requests, total = rq.length;
+  const cnt = k => rq.filter(r => (r.status||"todo")===k).length;
+  const done = cnt("ready")+cnt("sent")+cnt("na");
+  const gl = flagRows(glRows());
+  const flagged = gl.filter(r=>r.flags.length);
+  const noted = flagged.filter(r => (S.notes["G:"+r.gl]||"").trim()).length;
+  const sums = tbSums();
+  const exp = S.docs.map(d=>({d, s:docStatus(d)})).filter(x=>x.s.days!=null && x.s.days<=60).sort((a,b)=>a.s.days-b.s.days);
+  const bal = Math.abs(sums.current)<1;
+  const pend = rq.filter(r => !["ready","sent","na"].includes(r.status||"todo")).sort((a,b)=>a.n-b.n).slice(0,8);
+  const top = [...gl].sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff)).slice(0,6);
+  const seg = (k, color) => total ? `<i style="width:${cnt(k)/total*100}%;background:var(${color})"></i>` : "";
+  return `
+  <div class="tiles">
+    <div class="tile ${total && done===total?"good":"mid"}"><span class="k">طلبات المراجع الجاهزة</span><span class="v">${done} / ${total}</span>
+      <div class="bar">${seg("sent","--ok")}${seg("ready","--info")}${seg("doing","--warn")}</div></div>
+    <div class="tile ${exp.length?"bad":"good"}"><span class="k">مستندات رسمية تنتهي خلال 60 يوم</span><span class="v">${exp.length}</span><span class="k">${S.docs.length} مستند محفوظ</span></div>
+    <div class="tile ${bal?"good":"bad"}"><span class="k">توازن الميزان (${esc(A().currentLabel)})</span><span class="v">${bal?"متوازن":fmt(sums.current)}</span><span class="k">${S.tb.meta.sample?"ميزان تجريبي":(S.tb.rows.length+" حساب")}</span></div>
+    <div class="tile ${flagged.length-noted?"mid":"good"}"><span class="k">تنبيهات بدون تفسير</span><span class="v">${flagged.length-noted}</span><span class="k">من ${flagged.length} تنبيه على مستوى الحساب العام</span></div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="row between"><h3>طلبات لسه محتاجة شغل</h3><button class="btn sm" data-go="requests">كل الطلبات</button></div>
+      ${!S.loaded.requests ? `<p class="muted">جاري التحميل…</p>` : pend.length ? `<div class="reqs">${pend.map(r=>`<div class="row between" style="gap:6px"><span><b class="rn" style="font-size:14px">${r.n}</b> ${esc(r.title)}</span><span class="chip ${ST_CLASS[r.status||"todo"]}">${ST_LABEL[r.status||"todo"]}</span></div>`).join("")}</div>` : `<p class="muted">${total?"كل الطلبات جاهزة.":"لا توجد طلبات بعد. أضفها من تبويب طلبات المراجع."}</p>`}
+    </div>
+    <div class="panel">
+      <div class="row between"><h3>أكبر التغيرات في الميزان</h3><button class="btn sm" data-go="compare">المقارنة</button></div>
+      <div class="tbl"><table><thead><tr><th>الحساب</th><th class="n">${esc(A().priorLabel)}</th><th class="n">${esc(A().currentLabel)}</th><th class="n">التغير</th></tr></thead><tbody>
+      ${top.map(a=>`<tr><td>${esc(a.name)}</td><td class="n">${fmt(a.prior)}</td><td class="n">${fmt(a.current)}</td><td class="n">${fmt(a.diff)}</td></tr>`).join("")}
+      </tbody></table></div>
+    </div>
+    ${exp.length?`<div class="panel"><div class="row between"><h3>مستندات تحتاج تجديد</h3><button class="btn sm" data-go="docs">المستندات</button></div>
+      ${exp.map(x=>`<div class="row between"><span>${esc(x.d.title)}</span><span class="chip ${x.s.c}">${esc(x.s.l)}</span></div>`).join("")}</div>`:""}
+  </div>`;
+}
+
+function fileList(kind, id, files){
+  const key = kind+":"+id, up = S.ui.uploading[key];
+  return `<div class="row between"><h3>المرفقات (${(files||[]).length})</h3>
+    ${S.assets ? `<label class="btn sm primary upl">${up?"جاري رفع "+up+" ملف…":"إرفاق ملفات"}<input type="file" multiple data-upload="${kind}" data-id="${esc(id)}" id="up-${esc(key)}" ${up?"disabled":""}></label>` : `<span class="muted small">إرفاق الملفات متاح عند فتح البرنامج من رابطه</span>`}</div>
+    ${(files||[]).length ? `<div class="files">${files.map((f,i)=>`<div class="file">
+      <span class="nm">${esc(f.name)}</span><span class="sz">${fsize(f.size||0)}</span>
+      ${!f.wrapped ? `<a class="btn sm link" href="${esc(f.url||"/_blob/"+f.id)}" target="_blank" rel="noopener">عرض</a>` : ""}
+      ${S.downloads ? `<button class="btn sm link" data-act="dl" data-kind="${kind}" data-id="${esc(id)}" data-i="${i}">تحميل</button>` : ""}
+      ${S.assets ? (S.ui.confirm===key+":"+i ? `<button class="btn sm danger" data-act="rmfile" data-kind="${kind}" data-id="${esc(id)}" data-i="${i}">تأكيد الحذف</button>` : `<button class="btn sm link" data-act="ask" data-c="${esc(key+":"+i)}">حذف</button>`) : ""}
+    </div>`).join("")}</div>` : `<p class="muted small">لا توجد مرفقات. تقدر ترفع PDF وصور وإكسيل ووورد وأي ملف حتى 15 ميجا.</p>`}`;
+}
+
+function reqLinks(r){
+  const t = norm(r.text+" "+r.title), b = [];
+  if (r.n===1 || (r.cats||[]).includes("official")) b.push(`<button class="btn sm" data-go="docs">المستندات الرسمية</button>`);
+  if (t.includes("ميزان المراجعه")) b.push(`<button class="btn sm" data-go="compare">مقارنة الميزان والتنبيهات</button>`);
+  if (t.includes("مصادق")){
+    if (t.includes("عملاء")) b.push(`<button class="btn sm" data-letter="conf-customer">مصادقات العملاء</button>`);
+    if (t.includes("موردين")) b.push(`<button class="btn sm" data-letter="conf-supplier">مصادقات الموردين</button>`);
+    if (t.includes("شركاء")) b.push(`<button class="btn sm" data-letter="conf-partner">مصادقات الشركاء</button>`);
+    if (t.includes("بنوك") || t.includes("مصرفيه")) b.push(`<button class="btn sm" data-letter="bank-conf">مصادقات البنوك</button>`);
+  }
+  return b.join("");
+}
+function vRequests(){
+  if (!S.loaded.requests) return `<p class="muted">جاري تحميل الطلبات…</p>`;
+  const f = S.ui.reqFilter;
+  let list = S.requests.slice().sort((a,b)=>a.n-b.n);
+  const total = list.length, cnt = k => list.filter(r => (r.status||"todo")===k).length;
+  if (f==="open") list = list.filter(r => ["todo","doing"].includes(r.status||"todo"));
+  else if (f!=="all") list = list.filter(r => (r.status||"todo")===f);
+  return `
+  <div class="row between"><h2>طلبات المراجع</h2>
+    <div class="row"><div class="seg" role="group">
+      ${[["all","الكل ("+total+")"],["open","المتبقي ("+(cnt("todo")+cnt("doing"))+")"],["ready","جاهز ("+cnt("ready")+")"],["sent","تم التسليم ("+cnt("sent")+")"]].map(([k,l])=>`<button data-rf="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}
+    </div><button class="btn" data-act="addreq">إضافة طلب</button></div></div>
+  <p class="muted">كل طلب من خطاب المكتب في بطاقة. حدّث حالته، اكتب ملاحظاتك، وارفق ملفاته هنا بدل ما تحفظها على الجهاز.</p>
+  ${total ? "" : `<div class="panel"><p>لا توجد طلبات بعد. اضغط "إضافة طلب" وانسخ بنود خطاب الطلبات من مكتب المراجعة.</p></div>`}
+  <div class="reqs">${list.map(reqCard).join("")}</div>`;
+}
+function reqCard(r){
+  const st = r.status||"todo", open = S.ui.open===r.id, editing = S.ui.edit===r.id;
+  return `<article class="req s-${st}">
+    <div class="req-h" data-act="toggle" data-id="${esc(r.id)}">
+      <span class="rn">${r.n}</span>
+      <div class="rt"><b>${esc(r.title)}</b><div class="chips">${(r.cats||[]).map(c=>`<span class="chip c-mute">${esc(CATS[c]||c)}</span>`).join("")}</div></div>
+      <div class="rs"><span class="chip ${ST_CLASS[st]}">${ST_LABEL[st]}</span>${(r.files||[]).length?`<span class="muted small">${r.files.length} مرفق</span>`:""}</div>
+    </div>
+    ${open ? `<div class="req-b">
+      ${editing ? `
+        <label class="f">رقم الطلب<input type="number" id="e-n" value="${r.n}" style="width:90px"></label>
+        <label class="f">العنوان المختصر<input type="text" id="e-title" value="${esc(r.title)}"></label>
+        <label class="f">نص الطلب كما في خطاب المكتب<textarea id="e-text" rows="4">${esc(r.text)}</textarea></label>
+        <div class="row">${Object.entries(CATS).map(([k,l])=>`<label class="row" style="gap:4px"><input type="checkbox" id="e-cat-${k}" data-cat="${k}" ${(r.cats||[]).includes(k)?"checked":""}> ${l}</label>`).join("")}</div>
+        <div class="row"><button class="btn primary" data-act="saveedit" data-id="${esc(r.id)}">حفظ</button><button class="btn" data-act="canceledit">إلغاء</button>
+        ${S.ui.confirm==="req:"+r.id ? `<button class="btn danger" data-act="delreq" data-id="${esc(r.id)}">تأكيد حذف الطلب</button>` : `<button class="btn link" data-act="ask" data-c="req:${esc(r.id)}">حذف الطلب</button>`}</div>`
+      : `<div class="rtext">${esc(r.text||"")}</div>
+        <div class="row between"><div class="row">${reqLinks(r)}</div><button class="btn sm link" data-act="edit" data-id="${esc(r.id)}">تعديل الطلب</button></div>`}
+      <div class="row"><label class="f">الحالة<select data-act="status" data-id="${esc(r.id)}" id="st-${esc(r.id)}">${Object.entries(ST_LABEL).map(([k,l])=>`<option value="${k}" ${st===k?"selected":""}>${l}</option>`).join("")}</select></label></div>
+      <label class="f">ملاحظاتك (ما تم وما ينقص)<textarea data-act="reqnote" data-id="${esc(r.id)}" id="rn-${esc(r.id)}" rows="2">${esc(r.notes||"")}</textarea></label>
+      ${fileList("req", r.id, r.files)}
+    </div>` : ""}
+  </article>`;
+}
+
+function vDocs(){
+  if (!S.loaded.docs) return `<p class="muted">جاري التحميل…</p>`;
+  const list = S.docs.slice().sort((a,b) => { const x = docStatus(a).days, y = docStatus(b).days; return (x==null?1e9:x) - (y==null?1e9:y) || String(a.title).localeCompare(b.title,"ar"); });
+  return `
+  <div class="row between"><h2>المستندات الرسمية</h2><button class="btn" data-act="adddoc">إضافة مستند</button></div>
+  <p class="muted">السجلات التجارية والرخص والشهادات والعقود في مكان واحد، مع تنبيه قبل انتهاء أي مستند بـ 60 يوم. تفضل محفوظة من سنة لسنة.</p>
+  ${list.length ? "" : `<div class="panel"><p>لا توجد مستندات بعد.</p></div>`}
+  <div class="reqs">${list.map(d => {
+    const s = docStatus(d), open = S.ui.openDoc===d.id;
+    return `<article class="req ${s.c==="c-crit"?"s-doing":s.c==="c-ok"?"s-sent":""}">
+      <div class="req-h" data-act="toggledoc" data-id="${esc(d.id)}" style="grid-template-columns:minmax(0,1fr) auto">
+        <div class="rt"><b>${esc(d.title)}</b><span class="muted small">${esc(d.category||"")}${d.number?" · رقم "+esc(d.number):""}</span></div>
+        <div class="rs"><span class="chip ${s.c}">${esc(s.l)}</span>${(d.files||[]).length?`<span class="muted small">${d.files.length} مرفق</span>`:`<span class="chip c-warn">بدون مرفق</span>`}</div>
+      </div>
+      ${open ? `<div class="req-b">
+        <div class="row">
+          <label class="f">اسم المستند<input type="text" data-dfield="title" data-id="${esc(d.id)}" id="d-title-${esc(d.id)}" value="${esc(d.title)}"></label>
+          <label class="f">التصنيف<input type="text" data-dfield="category" data-id="${esc(d.id)}" id="d-cat-${esc(d.id)}" value="${esc(d.category||"")}" list="doccats"></label>
+          <label class="f">الرقم<input type="text" data-dfield="number" data-id="${esc(d.id)}" id="d-num-${esc(d.id)}" value="${esc(d.number||"")}" style="min-width:140px"></label>
+          <label class="f">تاريخ الإصدار<input type="date" data-dfield="issue" data-id="${esc(d.id)}" id="d-iss-${esc(d.id)}" value="${esc(d.issue||"")}"></label>
+          <label class="f">تاريخ الانتهاء<input type="date" data-dfield="expiry" data-id="${esc(d.id)}" id="d-exp-${esc(d.id)}" value="${esc(d.expiry||"")}"></label>
+        </div>
+        <label class="f">ملاحظات<textarea data-dfield="notes" data-id="${esc(d.id)}" id="d-notes-${esc(d.id)}" rows="2">${esc(d.notes||"")}</textarea></label>
+        ${fileList("doc", d.id, d.files)}
+        <div>${S.ui.confirm==="doc:"+d.id ? `<button class="btn sm danger" data-act="deldoc" data-id="${esc(d.id)}">تأكيد حذف المستند ومرفقاته</button>` : `<button class="btn sm link" data-act="ask" data-c="doc:${esc(d.id)}">حذف المستند</button>`}</div>
+      </div>` : ""}
+    </article>`; }).join("")}</div>
+  <datalist id="doccats"><option>السجلات التجارية</option><option>تراخيص البلدية</option><option>شهادات</option><option>عقود الإيجار</option><option>عقد التأسيس</option><option>الزكاة والضريبة</option><option>التأمينات الاجتماعية</option></datalist>`;
+}
+
+// letters
+function letterList(){
+  const m = new Map(DEFAULT_LETTERS.map(l => [l.id, {...l, isDefault:true}]));
+  Object.values(S.letters).forEach(o => { const base = m.get(o.id); m.set(o.id, base ? {...base, ...o, isDefault:true, overridden:true} : {...o}); });
+  return [...m.values()];
+}
+function fillLetter(body, fields){
+  const c = C();
+  const map = {"الشركة":c.name,"السجل_التجاري":c.cr,"الرقم_الضريبي":c.vat,"العنوان":c.address,"المراجع":c.auditor,"عنوان_المراجع":c.auditorAddress,"بريد_المراجع":c.auditorEmail,
+    "نهاية_السنة":c.fyEnd,"التاريخ":fields.date||today(),"المفوض":c.signatory,"صفة_المفوض":c.signatoryTitle,"الطرف":fields.party,"المبلغ":fields.amount,"طبيعة_الرصيد":fields.side,"رقم_الحساب":fields.account};
+  return body.replace(/\{([^{}]+)\}/g, (m0,k) => (map[k]!=null && String(map[k]).trim()!=="") ? map[k] : "........");
+}
+function coverageList(group, pct){
+  const rows = leafRows().filter(r => { const ru = ruleFor((r.glName||"")+" "+r.name); return ru && ru.group===group && Math.abs(r.current)>=1; })
+    .sort((a,b)=>Math.abs(b.current)-Math.abs(a.current));
+  const total = rows.reduce((s,r)=>s+Math.abs(r.current),0);
+  const out = []; let acc = 0;
+  for (const r of rows){ if (total && acc/total*100 >= pct) break; out.push(r); acc += Math.abs(r.current); }
+  return {rows:out, all:rows.length, total, acc};
+}
+function vLetters(){
+  const list = letterList();
+  const L = list.find(l => l.id===S.ui.letter) || list[0];
+  const lf = S.ui.lf;
+  const cov = L.group ? coverageList(L.group, S.ui.cov) : null;
+  return `
+  <h2>الخطابات والنماذج</h2>
+  ${!C().name || !C().auditor ? `<div class="banner">أكمل بيانات الشركة والمراجع من <a href="#" data-go="settings">الإعدادات</a> لتظهر تلقائيًا في الخطابات.</div>` : ""}
+  <div class="letters">
+    <div class="panel" style="padding:8px"><div class="lt-list">
+      ${list.map(l=>`<button data-letter="${esc(l.id)}" aria-current="${l.id===L.id}">${esc(l.title)}</button>`).join("")}
+    </div><button class="btn sm" data-act="addletter" style="margin:6px">نموذج جديد</button></div>
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      ${cov ? `<div class="panel">
+        <h3>توليد مصادقات من الميزان</h3>
+        <p class="muted">يختار البرنامج أكبر الأرصدة في مجموعة "${esc(L.group)}" حتى يغطي النسبة المطلوبة من إجمالي الأرصدة، ويطلع خطاب لكل طرف في ملف Word واحد.</p>
+        <div class="row"><label class="f">نسبة التغطية %<input type="number" id="covPct" value="${S.ui.cov}" min="1" max="100" style="width:90px"></label>
+          <span>${cov.rows.length} طرف من ${cov.all} · يغطي ${cov.total?Math.round(cov.acc/cov.total*100):0}% (${fmtN.format(Math.round(cov.acc))} من ${fmtN.format(Math.round(cov.total))})</span></div>
+        <div class="row">${S.downloads && window.JSZip ? `<button class="btn primary" data-act="batchdocx" ${cov.rows.length?"":"disabled"}>تحميل ${cov.rows.length} خطاب Word</button>` : ""}
+          ${S.downloads && typeof XLSX!=="undefined" ? `<button class="btn" data-act="batchxlsx" ${cov.rows.length?"":"disabled"}>تحميل كشف الأطراف المختارة (إكسيل)</button>` : ""}</div>
+        ${S.tb.meta.sample ? `<p class="muted small">الأطراف الحالية من الميزان التجريبي. استورد ميزانك لتظهر أطرافك الحقيقية.</p>` : ""}
+      </div>` : ""}
+      <div class="panel">
+        <div class="row between"><input type="text" id="lt-title" value="${esc(L.title)}" style="font-weight:600;min-width:240px">
+          <div class="row">${L.overridden ? `<button class="btn sm link" data-act="resetletter">استرجاع النص الأصلي</button>` : ""}
+          ${!L.isDefault ? (S.ui.confirm==="letter:"+L.id ? `<button class="btn sm danger" data-act="delletter">تأكيد الحذف</button>` : `<button class="btn sm link" data-act="ask" data-c="letter:${esc(L.id)}">حذف النموذج</button>`) : ""}</div></div>
+        <div class="row">
+          <label class="f">الطرف (اسم البنك أو العميل أو المورد)<input type="text" id="lf-party" value="${esc(lf.party)}"></label>
+          <label class="f">المبلغ<input type="text" id="lf-amount" value="${esc(lf.amount)}" style="min-width:120px"></label>
+          <label class="f">طبيعة الرصيد<select id="lf-side"><option ${lf.side==="مدين"?"selected":""}>مدين</option><option ${lf.side==="دائن"?"selected":""}>دائن</option></select></label>
+          <label class="f">رقم الحساب<input type="text" id="lf-account" value="${esc(lf.account)}" style="min-width:140px"></label>
+          <label class="f">التاريخ<input type="date" id="lf-date" value="${esc(lf.date||today())}"></label>
+        </div>
+        <label class="f">نص النموذج (الكلمات بين { } تتعبى تلقائيًا، والسطر بين ** ** يطلع عريض)<textarea id="lt-body" rows="14">${esc(L.body)}</textarea></label>
+        <div class="row" style="gap:4px"><span class="muted small">إدراج:</span>${PH.map(p=>`<button class="ph" data-ph="${p}">{${p}}</button>`).join("")}</div>
+        <div class="row">${S.downloads && window.JSZip ? `<button class="btn primary" data-act="letterdocx">تحميل Word</button>` : ""}<button class="btn" data-act="lettercopy">نسخ النص</button></div>
+      </div>
+      <div class="preview">${esc(fillLetter(L.body, lf)).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}</div>
+    </div>
+  </div>`;
+}
+
+function vCompare(){
+  const a = A(), f = S.ui, subs = hasSubs();
+  const level = subs ? f.level : "gl";
+  let rows = flagRows(level==="gl" ? glRows() : subRows());
+  const q = norm(f.q);
+  if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")).includes(q) || String(r.code).includes(q));
+  if (f.flagged) rows = rows.filter(r => r.flags.length);
+  const shown = rows.slice(0, 1500);
+  const sums = tbSums();
+  const nk = r => (level==="gl"?"G:":"A:")+r.key;
+  const single = S.tb.meta.mode==="single";
+  return `
+  <div class="row between">
+    <h2>مقارنة الميزان: ${esc(a.priorLabel)} مقابل ${esc(a.currentLabel)}</h2>
+    <div class="row">
+      ${subs ? `<div class="seg" role="group"><button data-level="gl" aria-pressed="${level==="gl"}">الحساب العام</button><button data-level="sub" aria-pressed="${level==="sub"}">الحساب التحليلي</button></div>` : ""}
+      <input type="text" id="q" placeholder="ابحث باسم الحساب أو رقمه" value="${esc(f.q)}">
+      <label class="row" style="gap:6px"><input type="checkbox" id="onlyFlag" ${f.flagged?"checked":""}> التنبيهات فقط</label>
+    </div>
+  </div>
+  <p class="muted">الأرصدة الدائنة بين قوسين. اكتب تفسير كل تنبيه في عمود التفسير، وهيطلع في ملف الإكسيل للمراجع.${single?" الميزان مستورد من ملف واحد، فرصيد أول المدة لحسابات قائمة الدخل صفر؛ لمقارنة الإيرادات والمصروفات استورد ميزان العام السابق كملف ثاني.":""}</p>
+  <div class="tbl"><table>
+    <thead><tr><th>الرقم</th><th>اسم الحساب</th><th class="n">${esc(a.priorLabel)}</th><th class="n">${esc(a.currentLabel)}</th><th class="n">التغير</th><th class="n">%</th><th>التنبيه</th><th style="min-width:220px">التفسير</th></tr></thead>
+    <tbody>
+    ${shown.map(r => `<tr>
+      <td class="code">${esc(r.code)}</td><td>${esc(r.name)}${level==="sub"&&r.glName?`<div class="muted small">${esc(r.glName)}</div>`:""}</td>
+      <td class="n">${fmt(r.prior)}</td><td class="n">${fmt(r.current)}</td>
+      <td class="n ${r.diff>0?"up":r.diff<0?"down":""}">${fmt(r.diff)}</td>
+      <td class="n">${r.pct==null?(r.current&&!(single&&isPL(r.gl))?"جديد":""):pctTxt(r.pct)}</td>
+      <td><div class="chips">${r.flags.map(x=>`<span class="chip ${x.c}">${esc(x.l)}</span>`).join("")}</div></td>
+      <td>${r.flags.length||S.notes[nk(r)]?`<textarea class="ex" data-note="${esc(nk(r))}" id="ex-${esc(nk(r))}" placeholder="سبب التغير والمستند المؤيد">${esc(S.notes[nk(r)]||"")}</textarea>`:""}</td>
+    </tr>`).join("")}
+    <tr class="tot"><td></td><td>إجمالي الميزان (يجب أن يساوي صفر)</td><td class="n">${fmt(sums.prior)}</td><td class="n">${fmt(sums.current)}</td><td class="n">${fmt(sums.current-sums.prior)}</td><td></td><td></td><td></td></tr>
+    </tbody></table></div>
+  ${rows.length>shown.length?`<p class="muted small">يظهر أول ${shown.length} حساب من ${rows.length}. استخدم البحث أو "التنبيهات فقط".</p>`:""}`;
+}
+
+function vReclass(){
+  const a = A(), y = S.ui.reclassYear;
+  const lbl = y==="prior" ? a.priorLabel : a.currentLabel, k = y==="prior" ? "prior" : "current";
+  const groups = reclassData(y);
+  const je = groups.filter(g=>Math.abs(g.contra)>=1).map(g => {
+    const amt = fmtN.format(Math.round(Math.abs(g.contra)));
+    return g.rule.side==="D" ? `من حـ/ ${g.rule.group}   ${amt}\n      إلى حـ/ ${g.rule.target}   ${amt}` : `من حـ/ ${g.rule.target}   ${amt}\n      إلى حـ/ ${g.rule.group}   ${amt}`;
+  }).join("\n\n");
+  return `
+  <div class="row between">
+    <h2>إعادة تبويب الأرصدة المعاكسة لطبيعتها</h2>
+    <div class="seg" role="group"><button data-y="prior" aria-pressed="${y==="prior"}">${esc(a.priorLabel)}</button><button data-y="current" aria-pressed="${y==="current"}">${esc(a.currentLabel)}</button></div>
+  </div>
+  <p class="muted">كل حساب تحليلي برصيد عكس طبيعة مجموعته يتنقل لبنده الصحيح في القوائم. العميل الدائن يظهر ضمن الدفعات المقدمة من العملاء، والمورد المدين ضمن الدفعات المقدمة للموردين، والبنك الدائن ضمن البنوك الدائنة.</p>
+  <div class="tbl" style="max-height:none"><table>
+    <thead><tr><th>المجموعة</th><th class="n">الرصيد في الميزان</th><th class="n">الأرصدة الطبيعية</th><th class="n">الأرصدة المعاكسة</th><th>تُبوّب إلى</th></tr></thead>
+    <tbody>${groups.map(g=>`<tr><td><b>${esc(g.rule.group)}</b>${g.items.length?`<details><summary class="muted small">${g.items.length} حساب برصيد معاكس</summary><div class="muted small">${g.items.sort((x,z)=>Math.abs(z[k])-Math.abs(x[k])).map(x=>esc(x.code+" "+x.name)+": "+fmt(x[k])).join("<br>")}</div></details>`:""}</td>
+      <td class="n">${fmt(g.normal+g.contra)}</td><td class="n">${fmt(g.normal)}</td><td class="n">${fmt(g.contra)}</td>
+      <td>${Math.abs(g.contra)>=1?esc(g.rule.target):'<span class="chip c-ok">لا يوجد</span>'}</td></tr>`).join("")}
+    </tbody></table></div>
+  <div class="panel"><h3>قيد إعادة التبويب المقترح (${esc(lbl)})</h3>
+    <p class="muted">قيد عرض في القوائم المالية فقط، لا يُسجّل في الدفاتر.</p>
+    <div class="preview" style="font-variant-numeric:tabular-nums">${je?esc(je):"لا توجد أرصدة معاكسة."}</div>
+  </div>`;
+}
+
+function vImport(){
+  if (typeof XLSX === "undefined") return `<div class="panel">تعذر تحميل مكتبة قراءة الإكسيل. أعد تحميل الصفحة.</div>`;
+  const m = S.ui.imp.mode;
+  const box = (key, title) => { const s = S.ui.imp.src[key]; return `<div class="panel"><h3>${title}</h3>
+      <div class="drop"><input type="file" id="file-${key}" accept=".xlsx,.xls,.xlsm,.csv" data-src="${key}"><span class="muted small">${s?esc(s.fname):"ملف إكسيل أو CSV مصدّر من النظام المحاسبي"}</span></div>
+      ${s?mapUI(key, s):""}</div>`; };
+  const cur = S.tb.meta;
+  return `
+  <h2>استيراد ميزان المراجعة</h2>
+  ${!cur.sample ? `<p class="muted">الميزان المحفوظ حاليًا: ${esc((cur.files||[]).join(" + "))} · ${S.tb.rows.length} حساب · ${esc((cur.importedAt||"").slice(0,10))}</p>` : ""}
+  <div class="panel">
+    <div class="seg" role="group">
+      <button data-mode="single" aria-pressed="${m==="single"}">ملف واحد فيه أول وآخر المدة</button>
+      <button data-mode="two" aria-pressed="${m==="two"}">ملفين: ميزان العام السابق والحالي</button>
+    </div>
+    <p class="muted">البرنامج يتعرف على الأعمدة تلقائيًا، ويفهم صيغة "الحسابات التحليلية" اللي فيها سطر للحساب العام وتحته سطر للحساب التحليلي. ملف واحد يكفي للميزانية، لكن مقارنة الإيرادات والمصروفات تحتاج ملفين لأن أول المدة فيها صفر.</p>
+  </div>
+  <div class="grid2">${m==="single" ? box("A","ملف الميزان") : box("A","ميزان العام السابق (آخر المدة)") + box("B","ميزان العام الحالي")}</div>
+  <div class="row"><button class="btn primary" data-act="applyimp" ${(m==="single"?S.ui.imp.src.A:(S.ui.imp.src.A&&S.ui.imp.src.B))?"":"disabled"}>حفظ الميزان واستبدال الحالي</button></div>`;
+}
+function colOpts(s, sel){ return `<option value="-1">بدون</option>` + s.headers.map((h,i)=>`<option value="${i}" ${+sel===i?"selected":""}>${esc(h||("عمود "+(i+1)))}</option>`).join(""); }
+function mapUI(key, s){
+  const mp = s.map, single = S.ui.imp.mode==="single";
+  const per = (p, lbl) => `<div class="row">
+      <label class="f">${lbl}<select data-k="${key}" data-f="${p}.type" id="${key}-${p}-type"><option value="dc" ${mp[p].type==="dc"?"selected":""}>عمود مدين وعمود دائن</option><option value="bal" ${mp[p].type==="bal"?"selected":""}>عمود رصيد واحد</option></select></label>
+      ${mp[p].type==="dc" ? `<label class="f">مدين<select data-k="${key}" data-f="${p}.dr" id="${key}-${p}-dr">${colOpts(s, mp[p].dr)}</select></label><label class="f">دائن<select data-k="${key}" data-f="${p}.cr" id="${key}-${p}-cr">${colOpts(s, mp[p].cr)}</select></label>`
+        : `<label class="f">الرصيد (الدائن بالسالب)<select data-k="${key}" data-f="${p}.bal" id="${key}-${p}-bal">${colOpts(s, mp[p].bal)}</select></label>`}</div>`;
+  const pv = parseSource(s);
+  return `
+    <div class="row">
+      <label class="f">الورقة<select data-k="${key}" data-f="sheet" id="${key}-sheet">${s.wb.SheetNames.map(n=>`<option ${n===s.sheet?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
+      <label class="f">صف العناوين<input type="number" min="1" data-k="${key}" data-f="hdr" id="${key}-hdr" value="${s.hdr+1}" style="width:80px"></label>
+      <label class="f">رقم الحساب<select data-k="${key}" data-f="code" id="${key}-code">${colOpts(s, mp.code)}</select></label>
+      <label class="f">اسم الحساب<select data-k="${key}" data-f="name" id="${key}-name">${colOpts(s, mp.name)}</select></label>
+      <label class="row" style="gap:6px"><input type="checkbox" data-k="${key}" data-f="pair" id="${key}-pair" ${s.pair?"checked":""}> سطرين لكل حساب (عام + تحليلي)</label>
+    </div>
+    ${single ? per("prior","رصيد أول المدة") + per("current","رصيد آخر المدة") : per("current","الرصيد")}
+    <div class="tbl" style="max-height:220px"><table><thead><tr><th>الحساب العام</th><th>التحليلي</th><th>الاسم</th>${single?`<th class="n">أول المدة</th>`:""}<th class="n">${single?"آخر المدة":"الرصيد"}</th></tr></thead><tbody>
+      ${pv.rows.slice(0,5).map(r=>`<tr><td class="code">${esc(r.gl)}</td><td class="code">${esc(r.sub)}</td><td>${esc(r.name)}</td>${single?`<td class="n">${fmt(r.prior)}</td>`:""}<td class="n">${fmt(r.current)}</td></tr>`).join("")}
+    </tbody></table></div>
+    <p class="muted small">${pv.rows.length} حساب · ${Object.keys(pv.glNames).length} حساب عام · مجموع آخر المدة ${fmt(pv.rows.reduce((t,r)=>t+r.current,0))} (يجب أن يكون صفر)</p>`;
+}
+
+function vSettings(){
+  const c = C(), a = A();
+  const inp = (sec, k, lbl, w) => `<label class="f">${lbl}<input type="text" data-set="${sec}.${k}" id="s-${sec}-${k}" value="${esc(S.settings[sec][k])}" ${w?`style="min-width:${w}px"`:""}></label>`;
+  return `
+  <h2>الإعدادات</h2>
+  <div class="panel"><h3>بيانات الشركة والمراجع (تظهر في الخطابات)</h3><div class="row">
+    ${inp("company","name","اسم الشركة",260)}${inp("company","cr","رقم السجل التجاري")}${inp("company","vat","الرقم الضريبي")}${inp("company","address","العنوان",260)}
+    ${inp("company","auditor","مكتب المراجعة",260)}${inp("company","auditorAddress","عنوان المراجع",260)}${inp("company","auditorEmail","بريد المراجع")}
+    ${inp("company","fyEnd","نهاية السنة المالية")}${inp("company","signatory","اسم المفوض بالتوقيع")}${inp("company","signatoryTitle","صفته")}
+  </div></div>
+  <div class="panel"><h3>المقارنة والتنبيهات</h3><div class="row">
+    ${inp("analysis","priorLabel","مسمى العام السابق",100)}${inp("analysis","currentLabel","مسمى العام الحالي",100)}
+    <label class="f">نسبة التغير للتنبيه %<input type="number" data-set="analysis.pct" id="s-pct" value="${a.pct}"></label>
+    <label class="f">أقل مبلغ للتنبيه<input type="number" data-set="analysis.amount" id="s-amount" value="${a.amount}"></label>
+    ${inp("analysis","plPrefixes","حسابات قائمة الدخل تبدأ بـ",100)}
+    <label class="row" style="gap:6px"><input type="checkbox" data-set="analysis.skipParents" id="s-skip" ${a.skipParents?"checked":""}> استبعاد الحسابات الرئيسية التجميعية</label>
+  </div></div>
+  <div class="panel">
+    <h3>قواعد طبيعة الحسابات وإعادة التبويب</h3>
+    <p class="muted">البرنامج يبحث في اسم الحساب العام والتحليلي عن الكلمات المفتاحية (افصل بينها بـ |). أول قاعدة تنطبق هي المستخدمة. كلمات الاستثناء تمنع التطابق، مثل "مصروفات بنكية" مع قاعدة البنوك.</p>
+    <div class="tbl" style="max-height:none"><table><thead><tr><th>المجموعة</th><th>كلمات مفتاحية</th><th>استثناء</th><th>الطبيعة</th><th>تُبوّب إلى عند الرصيد المعاكس</th><th></th></tr></thead><tbody>
+    ${S.settings.rules.map((r,i)=>`<tr>
+      <td><input type="text" data-r="${i}" data-f="group" id="r${i}-group" value="${esc(r.group)}"></td>
+      <td><input type="text" data-r="${i}" data-f="kw" id="r${i}-kw" value="${esc(r.kw)}"></td>
+      <td><input type="text" data-r="${i}" data-f="ex" id="r${i}-ex" value="${esc(r.ex)}"></td>
+      <td><select data-r="${i}" data-f="side" id="r${i}-side"><option value="D" ${r.side==="D"?"selected":""}>مدين</option><option value="C" ${r.side==="C"?"selected":""}>دائن</option></select></td>
+      <td><input type="text" data-r="${i}" data-f="target" id="r${i}-target" value="${esc(r.target)}" style="width:100%;min-width:220px"></td>
+      <td><button class="btn sm link" data-act="delrule" data-i="${i}">حذف</button></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="row"><button class="btn" data-act="addrule">إضافة قاعدة</button><button class="btn" data-act="resetrules">استرجاع القواعد الافتراضية</button></div>
+  </div>
+  <div class="panel" id="usage"><h3>${S.local ? "مكان حفظ البيانات والمرفقات" : "مساحة المرفقات"}</h3>
+    ${S.local ? `<p class="code" style="direction:ltr;text-align:right">${esc(S.local.dir||"")}</p>` : ""}
+    <p class="muted" id="usageTxt">${S.assets?"جاري الحساب…":"غير متاح في هذه الشاشة."}</p>
+    ${S.local ? `<div class="row"><button class="btn" data-act="choosedir">تغيير الفولدر</button><button class="btn" data-act="opendir">فتح الفولدر</button></div><p class="muted small">لو اخترت فولدر جوه OneDrive هيتعمل لك نسخة احتياطية أونلاين تلقائيًا.</p>` : ""}</div>
+  <div class="panel"><h3>نسخة احتياطية كاملة</h3>
+    <p class="muted">ملف واحد فيه كل البيانات والمرفقات: الطلبات، المستندات، الميزان، الربط، التسويات، الخطابات والسياسات. تستخدمه للحفظ، أو لنقل الشغل بين النسخة الأونلاين وبرنامج الويندوز.</p>
+    <div class="row">${S.downloads && window.JSZip ? `<button class="btn" data-act="backup">تحميل نسخة احتياطية كاملة</button>` : ""}
+      ${S.db && S.assets ? `<label class="btn">استيراد نسخة احتياطية<input type="file" accept=".zip" hidden id="restoreFile"></label>` : ""}</div>
+    <p class="muted small">الاستيراد يضيف البيانات للموجود ويستبدل اللي ليه نفس الرقم.</p></div>`;
+}
+
+// ---------- import parsing ----------
+const RX = { code:/رقم|كود|code|^no$|الرمز/i, name:/اسم|البيان|name|desc/i, dr:/مدين|debit|^dr/i, cr:/دائن|credit|^cr/i, bal:/رصيد|balance/i };
+function loadSheet(s, keepHdr){
+  s.aoa = XLSX.utils.sheet_to_json(s.wb.Sheets[s.sheet], {header:1, raw:true, defval:""});
+  if (!keepHdr){
+    s.hdr = 0; let best = 0;
+    for (let i=0;i<Math.min(20,s.aoa.length);i++){
+      const score = s.aoa[i].reduce((t,c) => typeof c!=="string" ? t : t + (RX.dr.test(c)||RX.cr.test(c) ? 2 : (RX.bal.test(c)||RX.name.test(c)||RX.code.test(c)) ? 1 : 0), 0);
+      if (score > best){ best = score; s.hdr = i; }
+    }
+  }
+  const hdrRow = s.aoa[s.hdr]||[], above = s.aoa[s.hdr-1]||[];
+  let carry = "";
+  s.headers = hdrRow.map((h,i) => { if (String(above[i]||"").trim()) carry = String(above[i]).trim(); return [carry, String(h||"").trim()].filter(Boolean).join(" / "); });
+  guessMap(s);
+  // two-line layout: GL row followed by an analytic row with no amounts
+  const data = s.aoa.slice(s.hdr+1).filter(r => r.some(c => c!=="" && c!=null));
+  const amtCols = s.headers.map((_,i)=>i).filter(i => i!==s.map.code && i!==s.map.name);
+  const noAmt = data.filter(r => !amtCols.some(i => isNum(r[i]))).length;
+  s.pair = data.length>10 && noAmt/data.length > 0.35;
+}
+function guessMap(s){
+  const H = s.headers, idx = rx => H.map((h,i)=>rx.test(h)?i:-1).filter(i=>i>=0);
+  const nameI = H.findIndex(h=>/اسم|name|البيان/i.test(h));
+  let codeI = H.findIndex((h,i)=>RX.code.test(h) && i!==nameI);
+  const drs = idx(RX.dr), crs = idx(RX.cr), bals = idx(RX.bal).filter(i=>!drs.includes(i)&&!crs.includes(i));
+  const mk = w => {
+    if (drs.length && crs.length) return {type:"dc", dr: w==="first"?drs[0]:drs[drs.length-1], cr: w==="first"?crs[0]:crs[crs.length-1], bal:-1};
+    if (bals.length) return {type:"bal", bal: w==="first"?bals[0]:bals[bals.length-1], dr:-1, cr:-1};
+    return {type:"bal", bal:-1, dr:-1, cr:-1};
+  };
+  const mov = drs.length>=3 && crs.length>=3 ? {dr:drs[1], cr:crs[1]} : null;
+  s.map = {code:codeI, name:nameI>=0?nameI:H.findIndex(h=>RX.name.test(h)), prior:mk("first"), current:mk("last"), mov};
+}
+function balOf(row, p){ return p.type==="dc" ? num(row[p.dr]) - num(row[p.cr]) : (p.bal>=0 ? num(row[p.bal]) : 0); }
+function parseSource(s){
+  const mp = s.map, rows = [], glNames = {};
+  const data = s.aoa.slice(s.hdr+1).filter(r => r.some(c => c!=="" && c!=null));
+  const cell = (r,i) => i>=0 ? String(r[i]??"").trim() : "";
+  const skip = r => { const c = cell(r,mp.code); return /اجمالي|إجمالي|المجموع|عدد السجلات|total/i.test(c) || (!c && /^(ال)?(اجمالي|إجمالي|المجموع)/.test(cell(r,mp.name))); };
+  const mk = (r, gl, glName, sub, name) => {
+    glNames[gl] = glNames[gl] || glName;
+    rows.push({gl, sub, name, prior: balOf(r, mp.prior), current: balOf(r, mp.current), mdr: mp.mov?num(r[mp.mov.dr]):0, mcr: mp.mov?num(r[mp.mov.cr]):0});
+  };
+  if (s.pair){
+    // each account takes two lines: the GL line with amounts, then the analytic line (blank when there is none)
+    const all = s.aoa.slice(s.hdr+1), blank = r => !r || !r.some(c => c!=="" && c!=null);
+    const amtCols = s.headers.map((_,i)=>i).filter(i => i!==mp.code && i!==mp.name);
+    const hasAmt = r => amtCols.some(i => isNum(r[i]));
+    for (let i=0;i<all.length;){
+      const r = all[i];
+      if (blank(r) || skip(r)){ i++; continue; }
+      const nx = all[i+1];
+      if (blank(nx)){ mk(r, cell(r,mp.code), cell(r,mp.name), "", cell(r,mp.name)); i += 2; }
+      else if (hasAmt(nx) || skip(nx)){ mk(r, cell(r,mp.code), cell(r,mp.name), "", cell(r,mp.name)); i += 1; }
+      else { mk(r, cell(r,mp.code), cell(r,mp.name), cell(nx,mp.code), cell(nx,mp.name)); i += 2; }
+    }
+  } else {
+    data.forEach(r => { if (skip(r)) return; const code = cell(r,mp.code), name = cell(r,mp.name); if (!code && !name) return; mk(r, code||name, name, "", name||code); });
+  }
+  return {rows, glNames};
+}
+async function applyImport(){
+  const imp = S.ui.imp; let rows, glNames;
+  if (imp.mode==="single"){ ({rows, glNames} = parseSource(imp.src.A)); }
+  else {
+    const pa = parseSource(imp.src.A), pb = parseSource(imp.src.B), m = new Map();
+    glNames = {...pa.glNames, ...pb.glNames};
+    pa.rows.forEach(r => m.set(r.gl+"/"+r.sub, {...r, prior:r.current, current:0, mdr:0, mcr:0}));
+    pb.rows.forEach(r => { const k = r.gl+"/"+r.sub, e = m.get(k); if (e){ e.current = r.current; e.mdr = r.mdr; e.mcr = r.mcr; e.name = r.name||e.name; } else m.set(k, {...r, prior:0}); });
+    rows = [...m.values()].sort((a,b)=>String(a.gl).localeCompare(String(b.gl),"en",{numeric:true}) || String(a.sub).localeCompare(String(b.sub),"en",{numeric:true}));
+  }
+  if (!rows.length){ toast("ما لقيتش حسابات. راجع صف العناوين والأعمدة."); return; }
+  const meta = {mode:imp.mode, files:Object.values(imp.src).map(s=>s.fname), importedAt:new Date().toISOString(), glNames};
+  await writeTB(meta, rows);
+  S.ui.imp.src = {}; S.view = "compare"; render(); toast("تم حفظ الميزان: "+rows.length+" حساب");
+}
+async function writeTB(meta, rows){
+  const r2 = v => Math.round(v*100)/100;
+  S.tb = {meta, rows:rows.map(r => ({...r, key:r.gl+(r.sub?"/"+r.sub:"")}))}; S.tbLoadedAt = meta.importedAt;
+  if (S.db){
+    const CH = 600, enc = rows.map(r => [r.gl, r.sub, r.name, r2(r.prior), r2(r.current), r2(r.mdr), r2(r.mcr)]);
+    const n = Math.ceil(enc.length/CH);
+    try{
+      const old = await S.db.doc("tb/meta").get();
+      for (let i=0;i<n;i++) await S.db.doc("tb/c"+i).set({rows:enc.slice(i*CH,(i+1)*CH)});
+      const oldN = old.exists ? (old.data().chunks||0) : 0;
+      for (let i=n;i<oldN;i++) await S.db.doc("tb/c"+i).delete();
+      await S.db.doc("tb/meta").set({...meta, chunks:n, count:rows.length});
+    }catch(e){ dbErr(e); }
+  }
+}
+
+// ---------- full backup (moves everything between the online and desktop versions) ----------
+async function backupExport(btn){
+  if (!window.JSZip) return;
+  btn.disabled = true; btn.textContent = "جاري تجهيز النسخة…";
+  try{
+    const z = new JSZip(), clean = o => JSON.parse(JSON.stringify(o));
+    const data = {v:1, at:new Date().toISOString(), settings:S.settings, notes:S.notes, requests:S.requests, docs:S.docs, letters:Object.values(S.letters),
+      fsmap:{overrides:S.fs.overrides}, fsprior:S.fs.prior, fa:{rates:S.fs.rates}, faDocs:Object.values(S.fs.faDocs).filter(h => (h.files||[]).length || h.notes),
+      adj:S.fs.adj, policies:Object.values(S.fs.policies), tb:S.tb.meta.sample ? null : {meta:S.tb.meta, rows:S.tb.rows.map(r => [r.gl, r.sub, r.name, r.prior, r.current, r.mdr, r.mcr])}};
+    const holders = [...S.requests, ...S.docs, ...data.faDocs];
+    let n = 0;
+    for (const h of holders) for (const f of (h.files||[])){
+      btn.textContent = "جاري تجهيز النسخة… "+(++n);
+      const res = await fetch(f.url || ("/_blob/"+f.id)); z.file("files/"+f.id, new Uint8Array(await res.arrayBuffer()));
+    }
+    z.file("data.json", JSON.stringify(clean(data)));
+    await saveFile("نسخة احتياطية - ملف المراجعة "+today()+".zip", await z.generateAsync({type:"uint8array"}));
+  }catch(e){ toast("تعذر تجهيز النسخة الاحتياطية."); }
+  btn.disabled = false; btn.textContent = "تحميل نسخة احتياطية كاملة";
+}
+async function backupImport(file){
+  if (!S.db || !S.assets){ toast("الاستيراد يحتاج الحفظ يكون متاح."); return; }
+  try{
+    const z = await JSZip.loadAsync(await file.arrayBuffer()), d = JSON.parse(await z.file("data.json").async("string"));
+    toast("جاري استيراد النسخة…");
+    const moved = {};
+    const moveFiles = async files => { const out = [];
+      for (const f of (files||[])){
+        if (moved[f.id]){ out.push(moved[f.id]); continue; }
+        const zf = z.file("files/"+f.id); if (!zf) continue;
+        const bytes = await zf.async("uint8array");
+        const blob = f.wrapped && S.assets.raw ? (() => { const j = JSON.parse(new TextDecoder().decode(bytes)); const bin = atob(j.b64); const u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return new File([u], f.name, {type:f.type||""}); })()
+          : new File([bytes], f.wrapped ? f.id+".json" : f.name, {type: f.wrapped ? "text/plain" : (f.type||"")});
+        const r = await S.assets.upload(blob, f.wrapped && !S.assets.raw ? {type:"text/plain"} : undefined);
+        moved[f.id] = {...f, id:r.id, url:r.url, wrapped: f.wrapped && !S.assets.raw}; out.push(moved[f.id]);
+      } return out; };
+    const strip = ({id, ...b}) => b;
+    await save("app/settings", d.settings); await save("app/notes", {map:d.notes||{}});
+    for (const r of d.requests||[]) await save("requests/"+r.id, {...strip(r), files:await moveFiles(r.files)});
+    for (const x of d.docs||[]) await save("docs/"+x.id, {...strip(x), files:await moveFiles(x.files)});
+    for (const l of d.letters||[]) await save("letters/"+l.id, strip(l));
+    for (const h of d.faDocs||[]) await save("fa/"+h.id.replace(/\//g,"~"), {files:await moveFiles(h.files), notes:h.notes||""});
+    for (const a of d.adj||[]) await save("adj/"+a.id, strip(a));
+    for (const p of d.policies||[]) await save("policies/"+p.id, strip(p));
+    await save("app/fsmap", d.fsmap||{overrides:{}}); await save("app/fa", d.fa||{rates:{}});
+    if (d.fsprior) await save("app/fsprior", d.fsprior);
+    if (d.tb) await writeTB({...d.tb.meta, importedAt:new Date().toISOString()}, d.tb.rows.map(r => ({gl:r[0], sub:r[1], name:r[2], prior:r[3], current:r[4], mdr:r[5]||0, mcr:r[6]||0})));
+    toast("تم استيراد النسخة الاحتياطية"); render();
+  }catch(e){ toast("الملف ده مش نسخة احتياطية من البرنامج."); }
+}
+
+// ---------- files ----------
+const NATIVE = /^(application\/pdf|image\/(png|jpeg|gif|webp))$/;
+const OK_EXT = ["gif","png","jpg","jpeg","webp","txt","json","md","docx","pptx","csv","html","svg","pdf","xlsx","zip"];
+function readB64(file){ return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(",")[1]||""); fr.onerror = rej; fr.readAsDataURL(file); }); }
+function findHolder(kind, id){
+  if (kind==="fa") return S.fs.faDocs[id] || (S.fs.faDocs[id] = {id, files:[], notes:""});
+  return kind==="req" ? S.requests.find(r=>r.id===id) : S.docs.find(d=>d.id===id);
+}
+function saveFa(h){ return save("fa/"+h.id.replace(/\//g,"~"), {files:h.files||[], notes:h.notes||"", updatedAt:new Date().toISOString()}); }
+const saveHolder = (kind, h) => kind==="req" ? saveReq(h) : kind==="fa" ? saveFa(h) : saveDoc(h);
+async function uploadTo(kind, id, files){
+  const key = kind+":"+id; S.ui.uploading[key] = files.length; render();
+  const added = [];
+  for (const f of files){
+    try{
+      let r, wrapped = false;
+      if (NATIVE.test(f.type) || S.assets.raw) r = await S.assets.upload(f);
+      else {
+        if (f.size > 15*1048576){ toast("الملف "+f.name+" أكبر من 15 ميجا."); continue; }
+        const b64 = await readB64(f);
+        r = await S.assets.upload(new Blob([JSON.stringify({v:1, name:f.name, type:f.type, b64})], {type:"text/plain"}), {type:"text/plain"});
+        wrapped = true;
+      }
+      added.push({id:r.id, url:r.url, name:f.name, size:f.size, type:f.type||"", wrapped, at:new Date().toISOString()});
+    }catch(e){
+      const c = e && e.code;
+      toast(c==="too_large" ? "الملف "+f.name+" أكبر من المسموح (20 ميجا)." : c==="quota_or_state" ? "مساحة المرفقات امتلأت." : "تعذر رفع "+f.name);
+    }
+  }
+  delete S.ui.uploading[key];
+  const h = findHolder(kind, id);
+  if (h && added.length){ h.files = (h.files||[]).concat(added); await saveHolder(kind, h); toast("تم رفع "+added.length+" ملف"); }
+  render();
+}
+async function downloadFile(meta){
+  try{
+    const res = await fetch(meta.url || ("/_blob/"+meta.id));
+    let data;
+    if (meta.wrapped){ const j = JSON.parse(await res.text()); const bin = atob(j.b64); data = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) data[i] = bin.charCodeAt(i); }
+    else data = new Uint8Array(await res.arrayBuffer());
+    const ext = (meta.name.split(".").pop()||"").toLowerCase();
+    let name = meta.name;
+    if (!OK_EXT.includes(ext)){
+      if (!window.JSZip){ toast("صيغة الملف غير مدعومة للتحميل هنا."); return; }
+      const z = new JSZip(); z.file(meta.name, data); data = await z.generateAsync({type:"uint8array"}); name = meta.name+".zip";
+    }
+    await S.downloads.save({filename:name, data});
+  }catch(e){ if (!(e && e.code==="declined")) toast("تعذر تحميل الملف."); }
+}
+async function removeFile(kind, id, i){
+  const h = findHolder(kind, id); if (!h) return;
+  const f = h.files[i];
+  try{ await S.assets.delete(f.id); }catch(e){}
+  h.files = h.files.filter((_,j)=>j!==i); S.ui.confirm = null;
+  await saveHolder(kind, h); render();
+}
+
+// ---------- docx ----------
+function xmlEsc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function docxParas(text){
+  return text.split("\n").map(line => {
+    const runs = line.split(/(\*\*.+?\*\*)/).filter(Boolean).map(seg => {
+      const b = /^\*\*.+\*\*$/.test(seg), t = b ? seg.slice(2,-2) : seg;
+      return `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${b?"<w:b/><w:bCs/>":""}<w:rtl/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr><w:t xml:space="preserve">${xmlEsc(t)}</w:t></w:r>`;
+    }).join("");
+    return `<w:p><w:pPr><w:bidi/><w:spacing w:after="80" w:line="320" w:lineRule="auto"/></w:pPr>${runs}</w:p>`;
+  }).join("");
+}
+async function docxBuild(texts){
+  const z = new JSZip();
+  z.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  z.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  const pb = `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+  z.file("word/document.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${texts.map(docxParas).join(pb)}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1300" w:right="1200" w:bottom="1300" w:left="1200" w:header="708" w:footer="708" w:gutter="0"/><w:bidi/></w:sectPr></w:body></w:document>`);
+  return z.generateAsync({type:"uint8array"});
+}
+async function saveFile(filename, data){
+  try{ await S.downloads.save({filename, data}); toast("تم الحفظ"); }
+  catch(e){ if (!(e && e.code==="declined")) toast("تعذر حفظ الملف في هذه الشاشة."); }
+}
+
+// ---------- excel export ----------
+async function exportXlsx(){
+  const a = A(), wb = XLSX.utils.book_new();
+  wb.Workbook = {Views:[{RTL:true}]};
+  const add = (n, d, widths) => { const ws = XLSX.utils.aoa_to_sheet(d); ws["!cols"] = widths.map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, ws, n); };
+  const gl = flagRows(glRows()), sums = tbSums();
+  add("المقارنة", [["رقم الحساب","اسم الحساب",a.priorLabel,a.currentLabel,"التغير","نسبة التغير %","التنبيه","التفسير"]]
+    .concat(gl.map(r => [r.code, r.name, r.prior, r.current, r.diff, r.pct==null?"":Math.round(r.pct*10)/10, r.flags.map(f=>f.l).join(" - "), S.notes["G:"+r.key]||""]))
+    .concat([["","الإجمالي",sums.prior,sums.current,sums.current-sums.prior,"","",""]]), [14,40,16,16,16,12,30,50]);
+  if (hasSubs()){
+    const sr = flagRows(subRows());
+    add("الحسابات التحليلية", [["الحساب العام","اسم الحساب العام","الحساب التحليلي","الاسم",a.priorLabel,a.currentLabel,"التغير","التنبيه","التفسير"]]
+      .concat(sr.map(r => [r.gl, r.glName, r.sub, r.name, r.prior, r.current, r.diff, r.flags.map(f=>f.l).join(" - "), S.notes["A:"+r.key]||""])), [12,30,12,40,16,16,16,30,40]);
+  }
+  const rc = [["السنة","المجموعة","الحساب","الاسم","الرصيد","تُبوّب إلى"]];
+  ["prior","current"].forEach(y => reclassData(y).forEach(g => g.items.forEach(x => rc.push([y==="prior"?a.priorLabel:a.currentLabel, g.rule.group, x.code, x.name, x[y], g.rule.target]))));
+  add("إعادة التبويب", rc, [10,24,18,40,16,44]);
+  if (S.requests.length) add("متابعة الطلبات", [["رقم","الطلب","الحالة","المرفقات","ملاحظات"]].concat(S.requests.slice().sort((x,y)=>x.n-y.n).map(r => [r.n, r.title, ST_LABEL[r.status||"todo"], (r.files||[]).map(f=>f.name).join("، "), r.notes||""])), [6,50,14,50,50]);
+  await saveFile("ملف المراجعة "+(C().name||"")+" "+a.currentLabel+".xlsx", XLSX.write(wb, {bookType:"xlsx", type:"array"}));
+}
+
+// ---------- events ----------
+function go(v){ S.view = v; LS.set("view", v); S.ui.confirm = null; render(); window.scrollTo(0,0); }
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) go(b.dataset.v); });
+$("#exportBtn").onclick = exportXlsx;
+const app = $("#app");
+app.addEventListener("click", async e => {
+  const t = e.target.closest("[data-go],[data-act],[data-letter],[data-rf],[data-y],[data-level],[data-mode],[data-ph],[data-fsv],[data-mlevel]");
+  if (!t) return;
+  if (t.dataset.go){ e.preventDefault(); go(t.dataset.go); return; }
+  if (t.dataset.letter){ S.ui.letter = t.dataset.letter; if (S.view!=="letters") go("letters"); else render(); return; }
+  if (t.dataset.rf){ S.ui.reqFilter = t.dataset.rf; render(); return; }
+  if (t.dataset.y){ S.ui.reclassYear = t.dataset.y; render(); return; }
+  if (t.dataset.level){ S.ui.level = t.dataset.level; render(); return; }
+  if (t.dataset.fsv){ S.ui.fsView = t.dataset.fsv; render(); return; }
+  if (t.dataset.mlevel){ S.ui.mapLevel = t.dataset.mlevel; S.ui.mapEdit = null; render(); return; }
+  if (t.dataset.mode){ S.ui.imp = {mode:t.dataset.mode, src:{}}; render(); return; }
+  if (t.dataset.ph){ const ta = $("#lt-body"); const p = ta.selectionStart||ta.value.length; ta.value = ta.value.slice(0,p)+"{"+t.dataset.ph+"}"+ta.value.slice(p); saveLetterBody(ta.value); return; }
+  const act = t.dataset.act, id = t.dataset.id;
+  if (act==="toggle"){ if (e.target.closest("select,input,textarea,a,button:not([data-act=toggle])")) return; S.ui.open = S.ui.open===id ? null : id; S.ui.edit = null; S.ui.confirm = null; render(); }
+  else if (act==="toggledoc"){ S.ui.openDoc = S.ui.openDoc===id ? null : id; S.ui.confirm = null; render(); }
+  else if (act==="ask"){ S.ui.confirm = t.dataset.c; render(); }
+  else if (act==="edit"){ S.ui.edit = id; render(); }
+  else if (act==="canceledit"){ S.ui.edit = null; S.ui.confirm = null; render(); }
+  else if (act==="saveedit"){
+    const r = S.requests.find(x=>x.id===id); if (!r) return;
+    r.n = +$("#e-n").value || r.n; r.title = $("#e-title").value.trim() || r.title; r.text = $("#e-text").value;
+    r.cats = [...app.querySelectorAll("[data-cat]")].filter(c=>c.checked).map(c=>c.dataset.cat);
+    S.ui.edit = null; await saveReq(r); render();
+  }
+  else if (act==="addreq"){
+    const n = S.requests.reduce((m,r)=>Math.max(m,r.n||0),0)+1;
+    const r = {id:uid("r"), n, title:"طلب جديد", text:"", cats:[], status:"todo", notes:"", files:[]};
+    S.requests.push(r); S.ui.open = r.id; S.ui.edit = r.id; S.ui.reqFilter = "all"; await saveReq(r); render();
+  }
+  else if (act==="delreq"){
+    const r = S.requests.find(x=>x.id===id);
+    if (r && S.assets) for (const f of (r.files||[])) { try{ await S.assets.delete(f.id); }catch(_){} }
+    S.requests = S.requests.filter(x=>x.id!==id); S.ui.open = null; S.ui.confirm = null; await del("requests/"+id); render();
+  }
+  else if (act==="adddoc"){
+    const d = {id:uid("d"), title:"مستند جديد", category:"", number:"", issue:"", expiry:"", notes:"", files:[]};
+    S.docs.push(d); S.ui.openDoc = d.id; await saveDoc(d); render();
+  }
+  else if (act==="deldoc"){
+    const d = S.docs.find(x=>x.id===id);
+    if (d && S.assets) for (const f of (d.files||[])) { try{ await S.assets.delete(f.id); }catch(_){} }
+    S.docs = S.docs.filter(x=>x.id!==id); S.ui.openDoc = null; S.ui.confirm = null; await del("docs/"+id); render();
+  }
+  else if (act==="dl"){ const h = findHolder(t.dataset.kind, id); if (h) downloadFile(h.files[+t.dataset.i]); }
+  else if (act==="rmfile"){ removeFile(t.dataset.kind, id, +t.dataset.i); }
+  else if (act==="fsxlsx"){ exportFS(); }
+  else if (act==="backup"){ backupExport(t); }
+  else if (act==="choosedir"){ const r = await S.local.chooseDir(); if (r) location.reload(); }
+  else if (act==="opendir"){ S.local.openDir(); }
+  else if (act==="rollover"){
+    const F = fsCompute(), v = {}; Object.keys(FS_SUB).forEach(k => v[k] = Math.round(F.v[k]*100)/100);
+    S.ui.confirm = null; await save("app/fsprior", {label:A().currentLabel, oci:Math.round(F.st.oci), source:"أرقام "+A().currentLabel+" بعد التسويات", v, at:new Date().toISOString()});
+    toast("تم حفظ أرقام المقارنة. غيّر سنوات المقارنة من الإعدادات."); render();
+  }
+  else if (act==="editprior"){ S.ui.editPrior = !S.ui.editPrior; render(); }
+  else if (act==="mapedit"){ S.ui.mapEdit = id; render(); }
+  else if (act==="mapcancel"){ S.ui.mapEdit = null; render(); }
+  else if (act==="mapreset"){ delete S.fs.overrides[id]; await save("app/fsmap", {overrides:S.fs.overrides}); render(); }
+  else if (act==="adjpreset"){ const p = ADJ_PRESETS[+t.dataset.i]; S.ui.adj = {desc:p[0], type:"adj", lines:p[1].map(([sub]) => ({sub, dr:"", cr:""}))}; render(); }
+  else if (act==="adjadd"){ S.ui.adj.lines.push({sub:"",dr:"",cr:""}); render(); }
+  else if (act==="adjrm"){ S.ui.adj.lines.splice(+t.dataset.i,1); render(); }
+  else if (act==="adjsave"){
+    const d = S.ui.adj, n = S.fs.adj.reduce((m,x)=>Math.max(m,x.n||0),0)+1;
+    const body = {n, desc:d.desc.trim(), type:d.type, lines:d.lines.filter(l => l.sub && (+l.dr||+l.cr)).map(l => ({sub:l.sub, dr:+l.dr||0, cr:+l.cr||0})), at:new Date().toISOString()};
+    const aid = uid("a"); S.fs.adj.push({id:aid, ...body}); S.ui.adj = blankAdj(); await save("adj/"+aid, body); render();
+  }
+  else if (act==="deladj"){ S.fs.adj = S.fs.adj.filter(x => x.id!==id); S.ui.confirm = null; await del("adj/"+id); render(); }
+  else if (act==="polopen"){ S.ui.polOpen = S.ui.polOpen===id ? null : id; render(); }
+  else if (act==="poladd"){ const pid = uid("p"); const o = {t:"قسم جديد", body:""}; S.fs.policies[pid] = {id:pid, ...o}; S.ui.polOpen = pid; await save("policies/"+pid, o); render(); }
+  else if (act==="polreset" || act==="poldel"){ delete S.fs.policies[id]; await del("policies/"+id); render(); }
+  else if (act==="poldocx"){
+    const c = C(), cover = "**"+(c.name||"")+"**\n**(شركة ذات مسؤولية محدودة)**\n**إيضاحات حول القوائم المالية**\n**للسنة المنتهية في "+(c.fyEnd||"")+"**\n**ريال سعودي**\n";
+    saveFile("السياسات المحاسبية والإيضاحات "+A().currentLabel+".docx", await docxBuild([cover + "\n" + policyList().map(p => "**"+p.t+"**\n"+policyText(p)).join("\n\n")]));
+  }
+  else if (act==="applyimp"){ t.disabled = true; t.textContent = "جاري الحفظ…"; applyImport(); }
+  else if (act==="addrule"){ S.settings.rules.push({group:"مجموعة جديدة",kw:"",ex:"",side:"D",target:""}); saveSettings(); render(); }
+  else if (act==="delrule"){ S.settings.rules.splice(+t.dataset.i,1); saveSettings(); render(); }
+  else if (act==="resetrules"){ S.settings.rules = JSON.parse(JSON.stringify(DEFAULT_RULES)); saveSettings(); render(); }
+  else if (act==="addletter"){ const l = {id:uid("l"), title:"نموذج جديد", group:"", body:"التاريخ: {التاريخ}\nالسادة / {الطرف}   المحترمين\n\n"}; S.letters[l.id] = l; S.ui.letter = l.id; save("letters/"+l.id, {title:l.title, group:"", body:l.body}); render(); }
+  else if (act==="delletter"){ const lid = S.ui.letter; delete S.letters[lid]; S.ui.letter = "conf-customer"; S.ui.confirm = null; await del("letters/"+lid); render(); }
+  else if (act==="resetletter"){ const lid = S.ui.letter; delete S.letters[lid]; await del("letters/"+lid); render(); }
+  else if (act==="lettercopy"){
+    const L = letterList().find(l=>l.id===S.ui.letter), txt = fillLetter(L.body, S.ui.lf).replace(/\*\*/g,"");
+    try{ await navigator.clipboard.writeText(txt); toast("تم نسخ النص"); }catch(_){ const p = app.querySelector(".preview"); const rg = document.createRange(); rg.selectNodeContents(p); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg); toast("النص محدد، انسخه بـ Ctrl+C"); }
+  }
+  else if (act==="letterdocx"){ const L = letterList().find(l=>l.id===S.ui.letter); saveFile(L.title+(S.ui.lf.party?" - "+S.ui.lf.party:"")+".docx", await docxBuild([fillLetter(L.body, S.ui.lf)])); }
+  else if (act==="batchdocx" || act==="batchxlsx"){
+    const L = letterList().find(l=>l.id===S.ui.letter), cov = coverageList(L.group, S.ui.cov);
+    if (act==="batchdocx"){
+      const texts = cov.rows.map(r => fillLetter(L.body, {...S.ui.lf, party:r.name, amount:fmtN.format(Math.round(Math.abs(r.current))), side:r.current>=0?"مدين":"دائن", account:r.sub||r.gl}));
+      saveFile(L.title+" - "+texts.length+" خطاب.docx", await docxBuild(texts));
+    } else {
+      const wb = XLSX.utils.book_new(); wb.Workbook = {Views:[{RTL:true}]};
+      const total = cov.total;
+      const d = [["م","رقم الحساب","الاسم","الرصيد","طبيعة الرصيد","النسبة من الإجمالي %","حالة المصادقة"]].concat(cov.rows.map((r,i)=>[i+1, r.sub||r.gl, r.name, Math.abs(r.current), r.current>=0?"مدين":"دائن", total?Math.round(Math.abs(r.current)/total*1000)/10:0, ""]));
+      d.push(["","","الإجمالي المختار",cov.acc,"",total?Math.round(cov.acc/total*1000)/10:0,""],["","","إجمالي المجموعة",total,"",100,""]);
+      const ws = XLSX.utils.aoa_to_sheet(d); ws["!cols"]=[{wch:5},{wch:14},{wch:44},{wch:16},{wch:12},{wch:14},{wch:18}]; XLSX.utils.book_append_sheet(wb, ws, "عينة المصادقات");
+      saveFile("عينة "+L.title+".xlsx", XLSX.write(wb,{bookType:"xlsx",type:"array"}));
+    }
+  }
+});
+function saveLetterBody(body){
+  const lid = S.ui.letter, L = letterList().find(l=>l.id===lid);
+  const o = {title:L.title, group:L.group||"", body};
+  S.letters[lid] = {id:lid, ...o}; save("letters/"+lid, o); render();
+}
+app.addEventListener("change", async e => {
+  const t = e.target;
+  if (t.dataset.upload){ const files = [...t.files]; if (files.length) uploadTo(t.dataset.upload, t.dataset.id, files); return; }
+  if (t.dataset.act==="status"){ const r = S.requests.find(x=>x.id===t.dataset.id); if (r){ r.status = t.value; await saveReq(r); render(); } return; }
+  if (t.dataset.act==="reqnote"){ const r = S.requests.find(x=>x.id===t.dataset.id); if (r){ r.notes = t.value; saveReq(r); } return; }
+  if (t.dataset.dfield){ const d = S.docs.find(x=>x.id===t.dataset.id); if (d){ d[t.dataset.dfield] = t.value; saveDoc(d); softRender(); } return; }
+  if (t.dataset.note){ S.notes[t.dataset.note] = t.value; saveNotes(); return; }
+  if (t.id==="restoreFile"){ const f = t.files[0]; if (f) backupImport(f); return; }
+  if (t.dataset.mapset!=null){ if (t.value){ S.fs.overrides[t.dataset.mapset] = t.value; S.ui.mapEdit = null; await save("app/fsmap", {overrides:S.fs.overrides}); render(); } return; }
+  if (t.id==="mapHow"){ S.ui.mapHow = t.value; render(); return; }
+  if (t.id==="mapLine"){ S.ui.mapLine = t.value; render(); return; }
+  if (t.id==="adj-desc"){ S.ui.adj.desc = t.value; render(); return; }
+  if (t.id==="adj-type"){ S.ui.adj.type = t.value; return; }
+  if (t.dataset.adjl!=null){ S.ui.adj.lines[+t.dataset.adjl][t.dataset.f] = t.value; render(); return; }
+  if (t.dataset.prior){
+    const cur = S.fs.prior || DRAFT_PRIOR, v = {...cur.v}, id = t.dataset.prior, x = +t.value||0;
+    v[id] = assetSec(lineOf(FS_SUB[id].line).sec) ? x : -x;
+    const o = {label:cur.label||A().priorLabel, oci:cur.oci||0, source:(cur.source||"")+(/معدلة/.test(cur.source||"")?"":" (معدلة يدويًا)"), v};
+    S.fs.prior = o; await save("app/fsprior", o); softRender(); return;
+  }
+  if (t.dataset.rate){ S.fs.rates[t.dataset.rate] = t.value; save("app/fa", {rates:S.fs.rates}); return; }
+  if (t.dataset.fanote){ const h = findHolder("fa", t.dataset.fanote); h.notes = t.value; saveFa(h); return; }
+  if (t.dataset.polt || t.dataset.polb){
+    const pid = t.dataset.polt || t.dataset.polb, p = policyList().find(x => x.id===pid);
+    const o = {t: t.dataset.polt ? (t.value||p.t) : p.t, body: t.dataset.polb ? t.value : p.body};
+    S.fs.policies[pid] = {id:pid, ...o}; await save("policies/"+pid, o); render(); return;
+  }
+  if (t.id==="onlyFlag"){ S.ui.flagged = t.checked; render(); return; }
+  if (t.id==="covPct"){ S.ui.cov = Math.min(100, Math.max(1, +t.value||70)); render(); return; }
+  if (t.id==="lt-body"){ saveLetterBody(t.value); return; }
+  if (t.id==="lt-title"){ const lid = S.ui.letter, L = letterList().find(l=>l.id===lid); const o = {title:t.value||L.title, group:L.group||"", body:L.body}; S.letters[lid] = {id:lid, ...o}; save("letters/"+lid, o); render(); return; }
+  if (t.id && t.id.startsWith("lf-")){ S.ui.lf[t.id.slice(3)] = t.value; render(); return; }
+  if (t.dataset.set){
+    const [sec, k] = t.dataset.set.split(".");
+    S.settings[sec][k] = t.type==="checkbox" ? t.checked : t.type==="number" ? (+t.value||0) : t.value;
+    saveSettings(); softRender(); return;
+  }
+  if (t.dataset.r!=null){ S.settings.rules[+t.dataset.r][t.dataset.f] = t.value; saveSettings(); softRender(); return; }
+  if (t.dataset.src){
+    const f = t.files[0]; if (!f) return;
+    try{ const wb = XLSX.read(await f.arrayBuffer(), {type:"array"}); const s = {fname:f.name, wb, sheet:wb.SheetNames[0]}; loadSheet(s); S.ui.imp.src[t.dataset.src] = s; render(); }
+    catch(_){ toast("تعذرت قراءة الملف. تأكد إنه ملف إكسيل أو CSV."); }
+    return;
+  }
+  if (t.dataset.k){
+    const s = S.ui.imp.src[t.dataset.k], f = t.dataset.f;
+    if (f==="sheet"){ s.sheet = t.value; loadSheet(s); }
+    else if (f==="hdr"){ s.hdr = Math.max(0,(+t.value||1)-1); loadSheet(s, true); }
+    else if (f==="pair"){ s.pair = t.checked; }
+    else if (f.includes(".")){ const [p,k] = f.split("."); s.map[p][k] = k==="type" ? t.value : +t.value; }
+    else s.map[f] = +t.value;
+    render();
+  }
+});
+app.addEventListener("input", e => {
+  if (e.target.id==="mapQ"){ S.ui.mapQ = e.target.value; const pos = e.target.selectionStart; render(); const n = $("#mapQ"); n.focus(); n.setSelectionRange(pos,pos); return; }
+  if (e.target.id==="q"){ S.ui.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $("#q"); n.focus(); n.setSelectionRange(pos,pos); }
+});
+// storage usage on settings view
+const usageObs = new MutationObserver(async () => {
+  const el = $("#usageTxt"); if (!el || !S.assets || el.dataset.done) return; el.dataset.done = "1";
+  try{ const {usage} = await S.assets.list(); el.textContent = `${usage.files} ملف · ${fsize(usage.bytes)} مستخدمة` + (usage.maxBytes ? ` من ${fsize(usage.maxBytes)}` : ""); }catch(_){ el.textContent = "تعذر قراءة المساحة."; }
+});
+usageObs.observe(app, {childList:true});
+
+document.documentElement.setAttribute("dir","rtl");
+document.documentElement.setAttribute("lang","ar");
+render();
+initCaps();
+</script>

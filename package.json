@@ -1,0 +1,37 @@
+{
+  "name": "audit-prep",
+  "productName": "AuditPrep",
+  "version": "1.0.0",
+  "description": "تجهيز متطلبات المراجعة الخارجية والقوائم المالية",
+  "main": "main.js",
+  "author": "GAMAL",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build:app": "node scripts/build-app.js",
+    "start": "npm run build:app && electron .",
+    "test": "node scripts/test-storage.js",
+    "dist": "npm run build:app && electron-builder --win nsis portable --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "jszip": "3.10.1",
+    "xlsx": "0.18.5"
+  },
+  "build": {
+    "appId": "com.adawat.auditprep",
+    "productName": "AuditPrep",
+    "files": ["main.js", "preload.js", "storage.js", "app/**/*", "package.json"],
+    "directories": {"output": "dist", "buildResources": "build"},
+    "win": {"target": ["nsis", "portable"]},
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "ملف المراجعة المسبق",
+      "artifactName": "AuditPrep-Setup-${version}.${ext}"
+    },
+    "portable": {"artifactName": "AuditPrep-Portable-${version}.${ext}"}
+  }
+}
