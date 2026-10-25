@@ -314,7 +314,7 @@ const S = {
   tb: sampleTB(), tbLoadedAt:null,
   ui:{level:"gl", q:"", flagged:false, reclassYear:"current", reqFilter:"all", open:null, openDoc:null, edit:null, letter:"conf-customer",
       lf:{party:"", amount:"", side:"مدين", account:"", date:""}, cov:70, uploading:{}, confirm:null, imp:{mode:"single", src:{}},
-      fsView:"bs", editPrior:false, mapLevel:"gl", mapQ:"", mapHow:"all", mapLine:"", mapEdit:null, polOpen:null, adj:null, coaSrc:null},
+      fsView:"bs", editPrior:false, mapLevel:"gl", mapQ:"", mapHow:"all", mapLine:"", mapEdit:null, polOpen:null, adj:null, coaSrc:null, wipe:"tb"},
   fs:{overrides:{}, adj:[], prior:null, rates:{}, faDocs:{}, policies:{}},
   coa:{rows:new Map(), meta:null, loadedAt:null},
 };
@@ -1646,7 +1646,16 @@ function vSettings(){
     <p class="muted">ملف واحد فيه كل البيانات والمرفقات: الطلبات، المستندات، الميزان، الربط، التسويات، الخطابات والسياسات. تستخدمه للحفظ، أو لنقل الشغل بين النسخة الأونلاين وبرنامج الويندوز.</p>
     <div class="row">${S.downloads && window.JSZip ? `<button class="btn" data-act="backup">تحميل نسخة احتياطية كاملة</button>` : ""}
       ${S.db && S.assets ? `<label class="btn">استيراد نسخة احتياطية<input type="file" accept=".zip" hidden id="restoreFile"></label>` : ""}</div>
-    <p class="muted small">الاستيراد يضيف البيانات للموجود ويستبدل اللي ليه نفس الرقم.</p></div>`;
+    <p class="muted small">الاستيراد يضيف البيانات للموجود ويستبدل اللي ليه نفس الرقم.</p></div>
+  <div class="panel"><h3>مسح البيانات والبدء من جديد</h3>
+    <p class="muted">المسح نهائي ومالوش رجوع. خد نسخة احتياطية الأول لو ممكن تحتاج البيانات.</p>
+    <div class="row"><label class="f">اختار اللي عايز تمسحه<select id="wipeWhat">
+      <option value="tb" ${S.ui.wipe==="tb"?"selected":""}>ميزان المراجعة بس (والتفسيرات)</option>
+      <option value="coa" ${S.ui.wipe==="coa"?"selected":""}>دليل الحسابات وربطه بس</option>
+      <option value="fs" ${S.ui.wipe==="fs"?"selected":""}>القوائم: التسويات وأرقام المقارنة والاستثناءات</option>
+      <option value="all" ${S.ui.wipe==="all"?"selected":""}>كل حاجة: كل البيانات والمرفقات والإعدادات</option></select></label>
+      <label class="f">اكتب كلمة «مسح» للتأكيد<input type="text" id="wipeConfirm" autocomplete="off" style="min-width:120px"></label>
+      <button class="btn danger" data-act="wipe">مسح</button></div></div>`;
 }
 
 // ---------- import parsing ----------
@@ -1742,6 +1751,40 @@ async function writeTB(meta, rows){
       await S.db.doc("tb/meta").set({...meta, chunks:n, count:rows.length});
     }catch(e){ dbErr(e); }
   }
+}
+
+// ---------- wipe ----------
+async function wipe(what){
+  const dropFiles = async list => { if (S.assets) for (const h of list) for (const f of (h.files||[])){ try{ await S.assets.delete(f.id); }catch(_){} } };
+  if (what==="tb" || what==="all"){
+    const n = (S.tb.meta && S.tb.meta.chunks) || 0;
+    S.tb = sampleTB(); S.tbLoadedAt = null; S.notes = {};
+    if (S.db){ for (let i=0;i<Math.max(n,50);i++) await del("tb/c"+i); await del("tb/meta"); }
+    saveNotes();
+  }
+  if (what==="coa" || what==="all"){
+    const n = (S.coa.meta && S.coa.meta.chunks) || 0;
+    S.coa = {rows:new Map(), meta:null, loadedAt:null};
+    if (S.db){ for (let i=0;i<Math.max(n,10);i++) await del("coa/c"+i); await del("coa/meta"); }
+  }
+  if (what==="fs" || what==="all"){
+    for (const a of S.fs.adj) await del("adj/"+a.id);
+    S.fs.adj = []; S.fs.overrides = {}; S.fs.prior = null;
+    await del("app/fsmap"); await del("app/fsprior");
+  }
+  if (what==="all"){
+    await dropFiles(S.requests); await dropFiles(S.docs); await dropFiles(Object.values(S.fs.faDocs));
+    for (const r of S.requests) await del("requests/"+r.id);
+    for (const d of S.docs) await del("docs/"+d.id);
+    for (const id of Object.keys(S.letters)) await del("letters/"+id);
+    for (const id of Object.keys(S.fs.faDocs)) await del("fa/"+id.replace(/\//g,"~"));
+    for (const id of Object.keys(S.fs.policies)) await del("policies/"+id);
+    await del("app/fa"); await del("app/settings"); await del("app/notes");
+    S.requests = []; S.docs = []; S.letters = {}; S.fs = {overrides:{}, adj:[], prior:null, rates:{}, faDocs:{}, policies:{}};
+    S.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); S.notes = {};
+    if (!S.db){ LS.set("settings", S.settings); LS.set("notes", {}); }
+  }
+  fsCache = null;
 }
 
 // ---------- full backup (moves everything between the online and desktop versions) ----------
@@ -1950,6 +1993,12 @@ app.addEventListener("click", async e => {
   else if (act==="rmfile"){ removeFile(t.dataset.kind, id, +t.dataset.i); }
   else if (act==="fsxlsx"){ exportFS(); }
   else if (act==="backup"){ backupExport(t); }
+  else if (act==="wipe"){
+    if (($("#wipeConfirm").value||"").trim() !== "مسح"){ toast("اكتب كلمة «مسح» في خانة التأكيد الأول."); return; }
+    t.disabled = true; t.textContent = "جاري المسح…";
+    try{ await wipe($("#wipeWhat").value); toast("تم المسح"); }catch(e){ toast("حصلت مشكلة أثناء المسح. حاول تاني."); }
+    render();
+  }
   else if (act==="choosedir"){ const r = await S.local.chooseDir(); if (r) location.reload(); }
   else if (act==="opendir"){ S.local.openDir(); }
   else if (act==="rollover"){
@@ -2029,6 +2078,7 @@ app.addEventListener("change", async e => {
   if (t.dataset.act==="reqnote"){ const r = S.requests.find(x=>x.id===t.dataset.id); if (r){ r.notes = t.value; saveReq(r); } return; }
   if (t.dataset.dfield){ const d = S.docs.find(x=>x.id===t.dataset.id); if (d){ d[t.dataset.dfield] = t.value; saveDoc(d); softRender(); } return; }
   if (t.dataset.note){ S.notes[t.dataset.note] = t.value; saveNotes(); return; }
+  if (t.id==="wipeWhat"){ S.ui.wipe = t.value; return; }
   if (t.id==="restoreFile"){ const f = t.files[0]; if (f) backupImport(f); return; }
   if (t.id==="coaFile"){ const f = t.files[0]; if (!f) return;
     try{ const wb = XLSX.read(await f.arrayBuffer(), {type:"array"}); const src = {fname:f.name, wb, sheet:wb.SheetNames[0]}; coaParse(src); S.ui.coaSrc = src; render(); }
