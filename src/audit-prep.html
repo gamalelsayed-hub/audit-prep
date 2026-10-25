@@ -322,7 +322,7 @@ function sampleTB(){
 
 // ---------- state ----------
 const S = {
-  view: LS.get("view","summary"),
+  view: LS.get("view","start"),
   db:null, assets:null, downloads:null, capsReady:false,
   settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
   notes:{}, requests:[], docs:[], letters:{},
@@ -330,8 +330,9 @@ const S = {
   tb: sampleTB(), tbLoadedAt:null,
   ui:{level:"gl", q:"", flagged:false, reclassYear:"current", reqFilter:"all", open:null, openDoc:null, edit:null, letter:"conf-customer",
       lf:{party:"", amount:"", side:"مدين", account:"", date:""}, cov:70, uploading:{}, confirm:null, imp:{mode:"single", src:{}},
-      fsView:"bs", editPrior:false, mapLevel:"gl", mapQ:"", mapHow:"all", mapLine:"", mapEdit:null, polOpen:null, adj:null},
+      fsView:"bs", editPrior:false, mapLevel:"gl", mapQ:"", mapHow:"all", mapLine:"", mapEdit:null, polOpen:null, adj:null, coaSrc:null},
   fs:{overrides:{}, adj:[], prior:null, rates:{}, faDocs:{}, policies:{}},
+  coa:{rows:new Map(), meta:null, loadedAt:null},
 };
 const blankAdj = () => ({desc:"", type:"adj", lines:[{sub:"",dr:"",cr:""},{sub:"",dr:"",cr:""}]});
 S.ui.adj = blankAdj();
@@ -389,6 +390,15 @@ async function initCaps(){
   db.collection("adj").onSnapshot(q => { S.fs.adj = q.docs.map(d => ({id:d.id, ...JSON.parse(JSON.stringify(d.data()))})); softRender(); }, ()=>{});
   db.collection("fa").onSnapshot(q => { const m = {}; q.docs.forEach(d => m[d.id.replace(/~/g,"/")] = {id:d.id.replace(/~/g,"/"), ...JSON.parse(JSON.stringify(d.data()))}); S.fs.faDocs = m; softRender(); }, ()=>{});
   db.collection("policies").onSnapshot(q => { const m = {}; q.docs.forEach(d => m[d.id] = {id:d.id, ...d.data()}); S.fs.policies = m; softRender(); }, ()=>{});
+  db.doc("coa/meta").onSnapshot(async s => {
+    if (!s.exists){ if (S.coa.rows.size && !S.coa.meta) return; S.coa = {rows:new Map(), meta:null, loadedAt:null}; fsCache = null; softRender(); return; }
+    const meta = s.data(); if (meta.savedAt === S.coa.loadedAt) return;
+    try{
+      const parts = await Promise.all(Array.from({length:meta.chunks}, (_,i) => db.doc("coa/c"+i).get()));
+      const m = new Map(); parts.forEach(p => { if (p.exists) (p.data().rows||[]).forEach(r => m.set(String(r[0]), {code:String(r[0]), name:r[1], dr:r[2]||"", cr:r[3]||"", ok:!!r[4]})); });
+      S.coa = {rows:m, meta, loadedAt:meta.savedAt}; fsCache = null; softRender();
+    }catch(e){ toast("تعذر تحميل دليل الحسابات."); }
+  }, ()=>{});
   db.doc("tb/meta").onSnapshot(async s => {
     if (!s.exists) return;
     const meta = s.data();
@@ -484,6 +494,7 @@ const FS_LINES = [
   {id:"orec", sec:"ca", t:"ذمم مدينة وموجودات متداولة أخرى", note:"7", subs:[["prepaid","مصاريف مدفوعة مقدمًا"],["bankguar","ضمانات بنكية"],["supadv","موردون ومقاولون مدينون"],["lcguar","ضمانات اعتمادات مستندية"],["emp","ذمم وعهد موظفين"],["wip","أعمال تحت التنفيذ"],["otherrec","أرصدة مدينة أخرى"]]},
   {id:"rpdr", sec:"ca", t:"مستحق على أطراف ذات علاقة", note:"8/أ", subs:[["rpdr","مستحق على أطراف ذات علاقة"]]},
   {id:"inv", sec:"ca", t:"مخزون", note:"9", subs:[["inv_gross","بضاعة"],["invprov","مخصص بضاعة متقادمة وبطيئة الحركة"]]},
+  {id:"ltinv", sec:"nca", t:"استثمارات طويلة الأجل", note:"", subs:[["ltinv","استثمارات طويلة الأجل"]]},
   {id:"ppe", sec:"nca", t:"ممتلكات، آلات ومعدات", note:"10", subs:[["ppe_cost","التكلفة"],["ppe_dep","مجمع الاستهلاك"]]},
   {id:"stfin", sec:"cl", t:"تسهيلات ومرابحات بنكية قصيرة الأجل", note:"11", subs:[["stloan","مرابحات بنكية قصيرة الأجل"],["ltcur","مرابحات بنكية طويلة الأجل - الجزء المتداول"],["stdefint","فوائد تمويلية مؤجلة"]]},
   {id:"ap", sec:"cl", t:"ذمم دائنة تجارية", note:"", subs:[["ap","ذمم دائنة تجارية"]]},
@@ -542,6 +553,11 @@ const DEFAULT_MAP = [
   ["5130112","s_bonus","s_bonus"],["5130113","g_eosb","g_eosb"],["5130201","s_cons","s_cons"],["5130202","s_cons","s_cons"],["5130203","s_bonus","s_bonus"],
   ["5130206","s_car","s_car"],["5130207","s_cons","s_cons"],["51303","g_fees","g_fees"],["5130302","s_ins","s_ins"],
   ["514","fin","fin"],
+  ["121","ppe_cost","ppe_cost"],["122","ppe_cost","ppe_cost"],["1310101","ppe_cost","ppe_cost"],["1410101","ltinv","ltinv"],["1120101","otherrec","otherrec"],
+  ["1140205","rpdr","rpcr"],["1140211","inv_gross","inv_gross"],["1140212","emp","otherpay"],
+  ["2130101","stloan","stloan"],["2130102","supadv","ap"],["21601","leasest","leasest"],
+  ["5120103","g_sal","g_sal"],["5120104","g_sal","g_sal"],["5120106","g_sal","g_sal"],["5120113","g_sal","g_sal"],["5120203","g_elec","g_elec"],["5120220","zakat_exp","zakat_exp"],
+  ["5130103","s_sal","s_sal"],["5130104","s_sal","s_sal"],["5130204","s_cons","s_cons"],
   // analytic-name rules
   ["51203","g_gosi","g_gosi","تأمينات اجتماعية"],["51303","g_gosi","g_gosi","تأمينات اجتماعية"],
 ];
@@ -821,20 +837,165 @@ function mapByName(r){
   const hit = NAME_MAP.find(([k,,,ds]) => ds.includes(d) && k.split("|").some(w => n.includes(w)));
   return hit ? (r.current >= 0 ? hit[1] : hit[2]) : null;
 }
-function mapHow(r){
-  const ov = S.fs.overrides;
-  if (r.sub && ov[r.gl+"/"+r.sub]) return {s:ov[r.gl+"/"+r.sub], how:"manual"};
-  if (ov[r.gl]) return {s:ov[r.gl], how:"manual"};
-  // a precise code rule (3+ digits) wins; otherwise the account name decides, then the first digit
+// ---------- chart of accounts: each account is mapped once to a statement line, then trial balances never guess ----------
+// S.coa.rows: Map code -> {code, name, dr, cr, ok}; dr/cr = sub-line when the balance is debit / credit, ok = confirmed by the user
+const coaOn = () => S.coa.rows.size > 0;
+function suggestFor(code, name){
+  const one = cur => { const r = {gl:String(code), sub:"", name, glName:"", current:cur}; return autoMap(r).s; };
+  return {dr:one(1), cr:one(-1)};
+}
+// the mapping logic used before a chart exists, and to suggest lines for new chart accounts
+function autoMap(r){
   const longest = DEFAULT_MAP.filter(([p]) => r.gl.startsWith(p)).reduce((m,[p]) => Math.max(m, p.length), 0);
   let s = longest >= 3 ? mapRow(r, DEFAULT_MAP, null) : mapByName(r), how = "rule";
   if (!s){ s = mapRow(r, DEFAULT_MAP, null); if (!longest) how = "guess"; }
   if (s==="ppe_cost" && isDepAcc(r.glName || r.name)) s = "ppe_dep";
   return {s, how};
 }
+function mapHow(r){
+  const ov = S.fs.overrides;
+  if (r.sub && ov[r.gl+"/"+r.sub]) return {s:ov[r.gl+"/"+r.sub], how:"manual"};
+  if (coaOn()){
+    const a = S.coa.rows.get(r.gl);
+    if (!a) return {s:null, how:"missing"};
+    const s = r.current >= 0 ? a.dr : (a.cr || a.dr);
+    return {s: s || null, how: !s ? "missing" : a.ok ? "coa" : "suggested"};
+  }
+  if (ov[r.gl]) return {s:ov[r.gl], how:"manual"};
+  return autoMap(r);
+}
+
+let coaTimer = null;
+function saveCoa(now){
+  clearTimeout(coaTimer);
+  const run = async () => {
+    const rows = [...S.coa.rows.values()].sort((a,b) => a.code.localeCompare(b.code, "en", {numeric:true}));
+    const CH = 700, n = Math.ceil(rows.length/CH), oldN = (S.coa.meta && S.coa.meta.chunks) || 0;
+    const meta = {chunks:n, count:rows.length, savedAt:new Date().toISOString(), source:(S.coa.meta && S.coa.meta.source) || ""};
+    S.coa.meta = meta; S.coa.loadedAt = meta.savedAt; fsCache = null;
+    if (!S.db) return;
+    for (let i=0;i<n;i++) await save("coa/c"+i, {rows:rows.slice(i*CH,(i+1)*CH).map(a => [a.code, a.name, a.dr||"", a.cr||"", a.ok?1:0])});
+    for (let i=n;i<oldN;i++) await del("coa/c"+i);
+    await save("coa/meta", meta);
+  };
+  if (now) return run();
+  coaTimer = setTimeout(run, 700);
+}
+function coaFromRows(list, source){
+  const m = new Map();
+  list.forEach(([code, name]) => { code = String(code).trim(); if (!code || m.has(code)) return;
+    const old = S.coa.rows.get(code), ov = S.fs.overrides[code];
+    if (old) m.set(code, {...old, name: name || old.name});
+    else if (ov) m.set(code, {code, name, dr:ov, cr:ov, ok:true});
+    else { const sg = suggestFor(code, name); m.set(code, {code, name, dr:sg.dr, cr:sg.cr===sg.dr ? "" : sg.cr, ok:false}); }
+  });
+  S.coa.rows = m; S.coa.meta = {...(S.coa.meta||{}), source};
+  return saveCoa(true);
+}
+// leaf accounts of an imported chart: codes that no other code extends
+function coaLeaves(list){
+  const codes = list.map(([c]) => String(c));
+  const set = new Set(codes);
+  return list.filter(([c]) => { c = String(c); for (const o of set) if (o !== c && o.length > c.length && o.startsWith(c)) return false; return true; });
+}
+function coaFromTB(){
+  const names = S.tb.meta.glNames || {}, seen = new Map();
+  S.tb.rows.forEach(r => { if (!seen.has(String(r.gl))) seen.set(String(r.gl), names[r.gl] || r.name); });
+  const list = [...seen.entries()];
+  return coaFromRows(hasSubs() ? list : coaLeaves(list), "الميزان");
+}
+function coaParse(s){
+  const aoa = XLSX.utils.sheet_to_json(s.wb.Sheets[s.sheet], {header:1, raw:true, defval:""});
+  let hdr = -1, cc = 0, nc = 1;
+  for (let i=0;i<Math.min(20,aoa.length);i++){
+    const row = aoa[i].map(x => String(x||""));
+    const c = row.findIndex(x => RX.code.test(x)), n = row.findIndex((x,j) => j!==c && RX.name.test(x));
+    if (c>=0 && n>=0){ hdr = i; cc = c; nc = n; break; }
+  }
+  s.aoa = aoa; s.headers = (aoa[Math.max(hdr,0)]||[]).map((h,i) => String(h||"").trim() || ("عمود "+(i+1)));
+  if (s.cc==null){ s.cc = cc; s.nc = nc; }
+  s.hdr = hdr;
+  const out = [];
+  aoa.slice(hdr+1).forEach(r => { const c = String(r[s.cc]??"").trim(), n = String(r[s.nc]??"").trim(); if (/^\d[\d.\-]*$/.test(c) && n) out.push([c, n]); });
+  s.list = out;
+  // a type column (رئيسي / فرعي) decides which accounts take postings; otherwise the code hierarchy does
+  const body = aoa.slice(hdr+1), tc = s.headers.findIndex((_,i) => body.filter(r => /^(فرعي|تحليلي)$/.test(String(r[i]||"").trim())).length > 5);
+  if (tc >= 0){ const leaf = new Set(body.filter(r => /^(فرعي|تحليلي)$/.test(String(r[tc]||"").trim())).map(r => String(r[s.cc]).trim())); s.leaves = out.filter(([c]) => leaf.has(c)); }
+  else s.leaves = coaLeaves(out);
+}
+
+function vCoa(){
+  const F = fsCompute(), u = S.ui, on = coaOn(), lvl = hasSubs() ? u.mapLevel : "gl";
+  const bal = new Map(); F.rows.forEach(r => bal.set(r.gl, (bal.get(r.gl)||0) + r.current));
+  const missing = [...new Set(F.rows.filter(r => r.how==="missing" && Math.abs(r.current)>=0.005).map(r => r.gl))];
+  const unconf = on ? [...S.coa.rows.values()].filter(a => !a.ok).length : 0;
+  const src = u.coaSrc;
+  const importPanel = `<div class="panel"><h3>${on ? "تحديث دليل الحسابات" : "ابدأ بدليل الحسابات"}</h3>
+    <p class="muted">${on ? `الدليل فيه ${S.coa.rows.size} حساب${S.coa.meta&&S.coa.meta.source?" (من "+esc(S.coa.meta.source)+")":""}. لو استوردته تاني الربط اللي عملته بيفضل زي ما هو، والحسابات الجديدة بتتضاف مقترحة.` : "استورد دليل الحسابات من النظام (إكسيل فيه رقم الحساب واسمه)، أو ابنيه من الميزان الحالي. البرنامج بيقترح البند لكل حساب، وانت بتأكده أو بتغيره مرة واحدة."}</p>
+    <div class="row">${typeof XLSX!=="undefined" ? `<label class="btn">استيراد الدليل من إكسيل<input type="file" hidden id="coaFile" accept=".xlsx,.xls,.xlsm,.csv"></label>` : ""}
+      ${!S.tb.meta.sample ? `<button class="btn" data-act="coatb">${on?"إضافة حسابات الميزان الناقصة":"بناء الدليل من الميزان الحالي"}</button>` : ""}</div>
+    ${src ? `<div class="row"><span class="muted small">${esc(src.fname)}</span>
+      <label class="f">الورقة<select data-coa="sheet">${src.wb.SheetNames.map(n=>`<option ${n===src.sheet?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
+      <label class="f">عمود رقم الحساب<select data-coa="cc">${src.headers.map((h,i)=>`<option value="${i}" ${i===src.cc?"selected":""}>${esc(h)}</option>`).join("")}</select></label>
+      <label class="f">عمود الاسم<select data-coa="nc">${src.headers.map((h,i)=>`<option value="${i}" ${i===src.nc?"selected":""}>${esc(h)}</option>`).join("")}</select></label></div>
+      <p class="muted small">لقيت ${src.list.length} حساب، منها ${src.leaves.length} حساب فرعي (اللي بيتربط). الحسابات الرئيسية (اللي تحتها حسابات) مش محتاجة ربط.${src.list[0]?" أول حساب: "+esc(src.list[0][0]+" "+src.list[0][1]):""}</p>
+      <div class="row"><button class="btn primary" data-act="coaapply" ${src.leaves.length?"":"disabled"}>حفظ الدليل</button><button class="btn link" data-act="coacancel">إلغاء</button></div>` : ""}
+  </div>`;
+  let rows;
+  if (lvl==="sub"){
+    rows = F.rows.map(r => ({code:r.gl+(r.sub?" / "+r.sub:""), key:r.gl+(r.sub?"/"+r.sub:""), gl:r.gl, sub:r.sub, name:r.name, glName:r.glName, bal:r.current, cur:r.fs, how:r.how}));
+  } else if (on){
+    rows = [...S.coa.rows.values()].map(a => ({code:a.code, key:a.code, gl:a.code, name:a.name, bal:bal.get(a.code), dr:a.dr, cr:a.cr, how:a.ok?"coa":"suggested"}));
+    missing.forEach(g => { const r = F.rows.find(x => x.gl===g); rows.push({code:g, key:g, gl:g, name:r.glName||r.name, bal:bal.get(g), how:"missing"}); });
+  } else {
+    const m = new Map();
+    F.rows.forEach(r => { let g = m.get(r.gl); if (!g){ g = {code:r.gl, key:r.gl, gl:r.gl, name:r.glName||r.name, bal:0, subs:new Set(), hows:new Set()}; m.set(r.gl, g); } g.bal += r.current; if (r.fs) g.subs.add(r.fs); g.hows.add(r.how); });
+    rows = [...m.values()].map(g => ({...g, list:[...g.subs], how: S.fs.overrides[g.gl] ? "manual" : g.hows.has("guess") ? "guess" : "rule"}));
+  }
+  const q = norm(u.mapQ);
+  if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")).includes(q) || String(r.key).includes(q));
+  if (u.mapHow==="todo") rows = rows.filter(r => ["suggested","missing","guess"].includes(r.how));
+  else if (u.mapHow==="bal") rows = rows.filter(r => Math.abs(r.bal||0)>=0.005);
+  else if (u.mapHow==="manual") rows = rows.filter(r => r.how==="manual");
+  if (u.mapLine) rows = rows.filter(r => [r.dr, r.cr, r.cur, ...(r.list||[])].some(s => s && FS_SUB[s] && FS_SUB[s].line===u.mapLine));
+  rows.sort((a,b) => (a.how==="missing"?0:1)-(b.how==="missing"?0:1) || String(a.code).localeCompare(String(b.code),"en",{numeric:true}));
+  const shown = rows.slice(0, 500);
+  const chip = h => ({coa:'<span class="chip c-ok">مؤكد</span>', suggested:'<span class="chip c-warn">مقترح</span>', missing:'<span class="chip c-crit">مش في الدليل</span>',
+    manual:'<span class="chip c-info">استثناء يدوي</span>', guess:'<span class="chip c-warn">تخمين</span>', rule:'<span class="chip c-mute">تلقائي</span>'})[h] || "";
+  const sel = (attr, v, blank) => `<select ${attr}><option value="">${blank}</option>${subOptions(v||"")}</select>`;
+  const todoN = on ? unconf + missing.length : 0;
+  return `<div class="row between"><h2>دليل الحسابات وربطه بالقوائم</h2>
+    <div class="row">${hasSubs() ? `<div class="seg" role="group"><button data-mlevel="gl" aria-pressed="${lvl==="gl"}">${on?"الدليل":"الحساب العام"}</button><button data-mlevel="sub" aria-pressed="${lvl==="sub"}">استثناءات الحسابات التحليلية</button></div>` : ""}</div></div>
+  ${on && todoN ? `<div class="banner">${missing.length?missing.length+" حساب في الميزان مش موجود في الدليل، وأرصدتهم مش داخلة القوائم لحد ما تربطهم. ":""}${unconf?unconf+" حساب في الدليل ربطه مقترح ولسه ما اتأكدش.":""}</div>` : ""}
+  ${lvl==="gl" ? importPanel : `<p class="muted">الحساب التحليلي بيتبع ربط الحساب العام بتاعه. استخدم الشاشة دي بس للاستثناءات، مثلًا مكافأة مستحقة لشريك تروح لأطراف ذات علاقة بدل المصروفات المستحقة.</p>`}
+  <div class="row"><input type="text" id="mapQ" placeholder="ابحث باسم الحساب أو رقمه" value="${esc(u.mapQ)}">
+    <select id="mapHow"><option value="all">كل الحسابات</option><option value="todo" ${u.mapHow==="todo"?"selected":""}>محتاجة مراجعة</option><option value="bal" ${u.mapHow==="bal"?"selected":""}>اللي ليها رصيد</option>${lvl==="sub"?`<option value="manual" ${u.mapHow==="manual"?"selected":""}>الاستثناءات</option>`:""}</select>
+    <select id="mapLine"><option value="">كل البنود</option>${FS_LINES.map(l=>`<option value="${l.id}" ${u.mapLine===l.id?"selected":""}>${esc(l.t)}</option>`).join("")}</select>
+    ${on && lvl==="gl" && rows.some(r => r.how==="suggested") ? `<button class="btn" data-act="coaokall">تأكيد المقترح للحسابات الظاهرة (${rows.filter(r=>r.how==="suggested").length})</button>` : ""}</div>
+  <div class="tbl"><table><thead><tr><th>الرقم</th><th>اسم الحساب</th><th class="n">الرصيد ${esc(A().currentLabel)}</th>
+    ${on && lvl==="gl" ? `<th>البند لو الرصيد مدين</th><th>البند لو الرصيد دائن</th>` : `<th>البند في القوائم</th>`}<th>الحالة</th><th></th></tr></thead><tbody>
+  ${shown.map(r => {
+    const editing = u.mapEdit===r.key;
+    if (on && lvl==="gl"){
+      const a = S.coa.rows.get(r.code) || {};
+      return `<tr><td class="code">${esc(r.code)}</td><td>${esc(r.name)}</td><td class="n">${r.bal==null?"":fmt(r.bal)}</td>
+        <td>${editing ? sel(`data-coadr="${esc(r.code)}"`, a.dr, "اختر البند") : esc(subLabel(r.dr))}</td>
+        <td>${editing ? sel(`data-coacr="${esc(r.code)}"`, a.cr, "نفس بند المدين") : r.cr ? esc(subLabel(r.cr)) : r.dr ? '<span class="muted small">نفس بند المدين</span>' : ""}</td>
+        <td>${chip(r.how)}</td>
+        <td style="white-space:nowrap">${editing ? `<button class="btn sm link" data-act="mapcancel">تم</button>` : `<button class="btn sm link" data-act="mapedit" data-id="${esc(r.key)}">${r.how==="missing"?"ربط":"تغيير"}</button>`}${r.how==="suggested" ? `<button class="btn sm link" data-act="coaok" data-id="${esc(r.code)}">تأكيد</button>` : ""}</td></tr>`;
+    }
+    const ovk = lvl==="sub" ? r.key : r.gl, ov = S.fs.overrides[ovk];
+    return `<tr><td class="code">${esc(r.code)}</td><td>${esc(r.name)}${lvl==="sub"&&r.glName?`<div class="muted small">${esc(r.glName)}</div>`:""}</td><td class="n">${fmt(r.bal||0)}</td>
+      <td>${editing ? sel(`data-mapset="${esc(ovk)}"`, ov, "اختر البند") : (r.list||[r.cur]).filter(Boolean).map(s => esc(subLabel(s))).join("<br>")}</td>
+      <td>${chip(r.how)}</td>
+      <td style="white-space:nowrap">${editing ? `<button class="btn sm link" data-act="mapcancel">إلغاء</button>` : `<button class="btn sm link" data-act="mapedit" data-id="${esc(r.key)}">تغيير</button>`}${ov ? `<button class="btn sm link" data-act="mapreset" data-id="${esc(ovk)}">${lvl==="sub"?"إلغاء الاستثناء":"رجوع للتلقائي"}</button>` : ""}</td></tr>`;
+  }).join("")}</tbody></table></div>
+  ${rows.length>shown.length ? `<p class="muted small">يظهر أول ${shown.length} من ${rows.length}. استخدم البحث أو الفلاتر.</p>` : ""}`;
+}
+
 let fsCache = null;
 function fsCompute(){
-  const key = (S.tb.meta.importedAt||"sample")+"|"+JSON.stringify(S.fs.overrides)+"|"+JSON.stringify(S.fs.adj);
+  const key = (S.tb.meta.importedAt||"sample")+"|"+JSON.stringify(S.fs.overrides)+"|"+JSON.stringify(S.fs.adj)+"|"+(S.coa.loadedAt||"")+"|"+S.coa.rows.size;
   if (fsCache && fsCache.key===key) return fsCache;
   const rows = fsRows(), base = {}, src = {}, mov = {};
   Object.keys(FS_SUB).forEach(k => { base[k] = 0; src[k] = []; mov[k] = {open:0, dr:0, cr:0}; });
@@ -860,8 +1021,10 @@ function fsHead(title){
   const warn = [];
   if (S.tb.meta.sample) warn.push("الأرقام من ميزان تجريبي. استورد ميزان السنة من شاشة استيراد الميزان.");
   if (Math.abs(F.st.diff)>=1) warn.push("المركز المالي غير متوازن بفرق "+fmt(F.st.diff)+". راجع ربط الحسابات وتوازن التسويات.");
-  const guess = F.rows.filter(r => r.how==="guess" && Math.abs(r.current)>=1).length;
-  if (guess) warn.push(guess+" حساب مربوط بالتخمين حسب أول رقم في الحساب. <a href=\"#\" data-go=\"map\">راجع ربطها</a>.");
+  const cnt = h => new Set(F.rows.filter(r => r.how===h && Math.abs(r.current)>=1).map(r => r.gl)).size;
+  if (cnt("missing")) warn.push(cnt("missing")+" حساب في الميزان مش موجود في دليل الحسابات وأرصدته مش داخلة القوائم. <a href=\"#\" data-go=\"map\">اربطها</a>.");
+  if (cnt("suggested")) warn.push(cnt("suggested")+" حساب ليه رصيد وربطه لسه مقترح ما اتأكدش. <a href=\"#\" data-go=\"map\">راجعها</a>.");
+  if (cnt("guess")) warn.push(cnt("guess")+" حساب مربوط بالتخمين لأن دليل الحسابات لسه ما اتسجلش. <a href=\"#\" data-go=\"map\">سجّل الدليل</a>.");
   return `<div class="row between"><h2>${title}</h2>
     <div class="row">${S.downloads && typeof XLSX!=="undefined" ? `<button class="btn primary" data-act="fsxlsx">تحميل القوائم والإيضاحات (إكسيل)</button>` : ""}</div></div>
     ${warn.length ? `<div class="banner">${warn.join("<br>")}</div>` : ""}
@@ -943,38 +1106,6 @@ function vNotes(F){
   }).join("")}`;
 }
 
-function vMap(){
-  const F = fsCompute(), u = S.ui, lvl = hasSubs() ? u.mapLevel : "gl";
-  let rows;
-  if (lvl==="gl"){
-    const m = new Map();
-    F.rows.forEach(r => { let g = m.get(r.gl); if (!g){ g = {key:r.gl, gl:r.gl, sub:"", name:r.glName||r.name, current:0, subs:new Set(), hows:new Set()}; m.set(r.gl, g); } g.current += r.current; if (r.fs) g.subs.add(r.fs); g.hows.add(r.how); });
-    rows = [...m.values()].map(g => ({...g, fsList:[...g.subs], how: S.fs.overrides[g.gl] ? "manual" : g.hows.has("guess") ? "guess" : g.hows.has("manual") ? "mixed" : "rule"}));
-  } else rows = F.rows.map(r => ({...r, fsList:[r.fs], key:r.gl+(r.sub?"/"+r.sub:"")}));
-  const q = norm(u.mapQ);
-  if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")).includes(q) || (r.gl+"/"+r.sub).includes(q));
-  if (u.mapHow!=="all") rows = rows.filter(r => u.mapHow==="manual" ? (r.how==="manual"||r.how==="mixed") : r.how===u.mapHow);
-  if (u.mapLine) rows = rows.filter(r => r.fsList.some(s => FS_SUB[s] && FS_SUB[s].line===u.mapLine));
-  const shown = rows.slice(0, 400);
-  const howChip = h => ({manual:'<span class="chip c-info">يدوي</span>', mixed:'<span class="chip c-info">فيه تعديل يدوي</span>', guess:'<span class="chip c-warn">تخمين</span>', rule:'<span class="chip c-mute">تلقائي</span>'})[h];
-  return `<div class="row between"><h2>تبويب الحسابات على بنود القوائم</h2>
-    <div class="row">${hasSubs() ? `<div class="seg" role="group"><button data-mlevel="gl" aria-pressed="${lvl==="gl"}">الحساب العام</button><button data-mlevel="sub" aria-pressed="${lvl==="sub"}">الحساب التحليلي</button></div>` : ""}
-    <input type="text" id="mapQ" placeholder="ابحث باسم الحساب أو رقمه" value="${esc(u.mapQ)}">
-    <select id="mapHow"><option value="all">كل الحسابات</option><option value="guess" ${u.mapHow==="guess"?"selected":""}>المربوطة بالتخمين</option><option value="manual" ${u.mapHow==="manual"?"selected":""}>المعدلة يدويًا</option></select>
-    <select id="mapLine"><option value="">كل البنود</option>${FS_LINES.map(l=>`<option value="${l.id}" ${u.mapLine===l.id?"selected":""}>${esc(l.t)}</option>`).join("")}</select></div></div>
-  <p class="muted">زي عمود التصنيف في شيت المراجع: كل حساب مربوط ببند في القوائم والإيضاح. الحسابات التحليلية تتوزع حسب رصيدها، فالعميل الدائن يروح لعملاء دفعات مقدمة والمورد المدين لموردين مدينين تلقائيًا. غيّر الربط على مستوى الحساب العام (يطبق على كل التحليلي تحته) أو على حساب تحليلي واحد.</p>
-  <div class="tbl"><table><thead><tr><th>الرقم</th><th>اسم الحساب</th><th class="n">الرصيد ${esc(A().currentLabel)}</th><th>البند في القوائم</th><th>الربط</th><th></th></tr></thead><tbody>
-  ${shown.map(r => {
-    const k = lvl==="gl" ? r.gl : r.key, editing = u.mapEdit===k, ov = S.fs.overrides[k];
-    return `<tr><td class="code">${esc(lvl==="gl"?r.gl:r.gl+(r.sub?" / "+r.sub:""))}</td><td>${esc(r.name)}${lvl==="sub"&&r.glName?`<div class="muted small">${esc(r.glName)}</div>`:""}</td>
-      <td class="n">${fmt(r.current)}</td>
-      <td>${editing ? `<select data-mapset="${esc(k)}"><option value="">اختر البند</option>${subOptions(ov||"")}</select>` : r.fsList.map(s => esc(subLabel(s))).join("<br>")}</td>
-      <td>${howChip(r.how)}</td>
-      <td style="white-space:nowrap">${editing ? `<button class="btn sm link" data-act="mapcancel">إلغاء</button>` : `<button class="btn sm link" data-act="mapedit" data-id="${esc(k)}">تغيير</button>`}${ov ? `<button class="btn sm link" data-act="mapreset" data-id="${esc(k)}">رجوع للتلقائي</button>` : ""}</td></tr>`;
-  }).join("")}</tbody></table></div>
-  ${rows.length>shown.length ? `<p class="muted small">يظهر أول ${shown.length} من ${rows.length}. استخدم البحث أو الفلاتر.</p>` : ""}`;
-}
-
 function vAdj(){
   const F = fsCompute(), d = S.ui.adj, a = A();
   const tdr = d.lines.reduce((s,l)=>s+(+l.dr||0),0), tcr = d.lines.reduce((s,l)=>s+(+l.cr||0),0);
@@ -1008,8 +1139,9 @@ function fsChecks(){
   const add = (ok, t, d, warnOnly) => out.push({c: ok ? "c-ok" : warnOnly ? "c-warn" : "c-crit", l: ok ? "مطابق" : warnOnly ? "يحتاج مراجعة" : "فرق", t, d});
   add(Math.abs(sums.current)<1 && Math.abs(sums.prior)<1, "توازن ميزان المراجعة", `مجموع الأرصدة آخر المدة ${fmt(sums.current)} وأول المدة ${fmt(sums.prior)}.`);
   add(Math.abs(st.diff)<1, "توازن قائمة المركز المالي بعد الربط والتسويات", `الموجودات ${fmt(st.assets)} مقابل المطلوبات وحقوق الملكية ${fmt(st.liab+st.eq)}.`);
-  const guess = F.rows.filter(r => r.how==="guess" && Math.abs(r.current)>=1);
-  add(!guess.length, "كل الحسابات مربوطة ببنود القوائم", guess.length ? guess.length+" حساب مربوط بالتخمين، أكبرها: "+guess.sort((x,y)=>Math.abs(y.current)-Math.abs(x.current)).slice(0,3).map(r=>esc(r.name)+" "+fmt(r.current)).join("، ") : "لا يوجد حساب بالتخمين.", true);
+  const bad = F.rows.filter(r => ["guess","missing","suggested"].includes(r.how) && Math.abs(r.current)>=1);
+  const lbl = {guess:"بالتخمين", missing:"مش في الدليل", suggested:"مقترح"};
+  add(!bad.length, "كل الحسابات مربوطة بدليل الحسابات", bad.length ? bad.length+" حساب محتاج ربط أو تأكيد، أكبرها: "+bad.sort((x,y)=>Math.abs(y.current)-Math.abs(x.current)).slice(0,3).map(r=>esc(r.name)+" ("+lbl[r.how]+") "+fmt(r.current)).join("، ") : coaOn() ? "كل حسابات الميزان مربوطة ومؤكدة في الدليل." : "لا يوجد حساب بالتخمين.", !F.rows.some(r => r.how==="missing" && Math.abs(r.current)>=1));
   const depExp = F.base.g_dep, depCr = F.mov.ppe_dep.cr;
   add(Math.abs(depExp-depCr)<1, "مصروف الاستهلاك مقابل حركة مجمع الاستهلاك", `المصروف في قائمة الدخل ${fmt(depExp)} · المضاف لمجمع الاستهلاك (دائن) ${fmt(depCr)} · الفرق ${fmt(depExp-depCr)}. المستبعد من المجمع (مدين) ${fmt(F.mov.ppe_dep.dr)}.`);
   const eExp = F.base.g_eosb, eCr = F.mov.eosb.cr, ePaid = F.mov.eosb.dr;
@@ -1132,10 +1264,46 @@ async function exportFS(){
   await saveFile("القوائم المالية "+(C().name||"")+" "+a.currentLabel+".xlsx", XLSX.write(wb, {bookType:"xlsx", type:"array"}));
 }
 
+
+// ---------- getting started ----------
+function guideSteps(){
+  const c = C(), F = fsCompute(), sums = tbSums();
+  const bad = F.rows.filter(r => ["guess","missing","suggested"].includes(r.how) && Math.abs(r.current)>=1).length;
+  const flagged = flagRows(glRows()).filter(r => r.flags.length), noted = flagged.filter(r => (S.notes["G:"+r.gl]||"").trim()).length;
+  const checks = fsChecks().filter(x => x.c==="c-crit").length;
+  const reqDone = S.requests.filter(r => ["ready","sent","na"].includes(r.status||"todo")).length;
+  const real = !S.tb.meta.sample;
+  return [
+    {t:"بيانات الشركة والسنوات", go:"settings", done: !!(c.name && c.auditor), how:"من الإعدادات اكتب اسم الشركة والسجل والرقم الضريبي والعنوان ومكتب المراجعة واسم المفوض بالتوقيع. وحدد مسمى السنة الحالية والسابقة (مثلًا 2026 و 2025) ونهاية السنة المالية. البيانات دي بتتعبى تلقائي في الخطابات والسياسات."},
+    {t:"نقل شغلك القديم (مرة واحدة)", go:"settings", done: S.requests.length>0, optional:true, how:"لو كنت شغال على النسخة الأونلاين: افتحها، ومن الإعدادات اختار «تحميل نسخة احتياطية كاملة». بعدين هنا من الإعدادات اختار «استيراد نسخة احتياطية». كده الطلبات والمستندات ومرفقاتها والدليل وأرقام المقارنة بيتنقلوا كلهم."},
+    {t:"دليل الحسابات وربطه بالقوائم (مرة واحدة)", go:"map", done: coaOn() && ![...S.coa.rows.values()].some(a => !a.ok), how:"صدّر دليل الحسابات من النظام إكسيل، ومن شاشة دليل الحسابات اختار «استيراد الدليل من إكسيل» واحفظه. البرنامج بيقترح لكل حساب البند والإيضاح في القوائم. راجع المقترح وغيّر اللي محتاج تغيير، وبعدين أكده. الحساب اللي ممكن رصيده يقلب (زي العملاء والموردين) حدد له بند للمدين وبند للدائن. ولو فيه حساب تحليلي محتاج يروح لبند مختلف عن حسابه العام، سجّله من «استثناءات الحسابات التحليلية»."},
+    {t:"استيراد ميزان المراجعة", go:"import", done: real, how:"صدّر من النظام ميزان المراجعة بالحسابات التحليلية (أول المدة والحركة وآخر المدة) إكسيل، واستورده من شاشة استيراد الميزان. لو عندك ميزان السنة اللي فاتت كملف لوحده اختار «ملفين» عشان المقارنة تشمل الإيرادات والمصروفات. لو ظهرت حسابات جديدة مش في الدليل، البرنامج هينبهك تربطها الأول."},
+    {t:"مراجعة التغيرات وكتابة التفسيرات", go:"compare", done: real && flagged.length>0 && noted===flagged.length, how:"شاشة الميزان والتنبيهات بتعلّم أي حساب زاد أو قل بشكل غير طبيعي، أو انعكست طبيعته، أو اتفتح جديد. اكتب في عمود التفسير السبب والمستند المؤيد، والتفسيرات دي بتطلع في ملف الإكسيل للمراجع. ("+noted+" من "+flagged.length+" متفسرة)"},
+    {t:"إعادة تبويب الأرصدة المعاكسة", go:"reclass", done: real, how:"راجع العملاء الدائنين والموردين المدينين والبنوك الدائنة وغيرهم. البرنامج بينقلهم لبندهم الصحيح في القوائم تلقائيًا، وبيكتب لك قيد إعادة التبويب المقترح."},
+    {t:"التسويات", go:"adj", done: S.fs.adj.length>0, optional:true, how:"سجّل أي قيد لازم قبل الإقفال: مخصص الزكاة، مصروفات مستحقة أو مدفوعة مقدمًا، مخصص ديون أو مخزون، وأي تسوية يطلبها المراجع. القيود دي بتعدل القوائم بس، والدفاتر ما بتتأثرش."},
+    {t:"فحوصات المطابقة", go:"checks", done: real && !checks && !bad, how:"اقفل كل فرق باللون الأحمر قبل ما تسلّم الميزان: توازن الميزان والمركز المالي، ومصروف الإهلاك مقابل المجمع، ونهاية الخدمة، والزكاة، وربط كل الحسابات."},
+    {t:"القوائم المالية والإيضاحات", go:"fs", done: real && Math.abs(F.st.diff)<1 && !bad, how:"راجع المركز المالي والدخل الشامل والتغيرات في حقوق الملكية والإيضاحات، وافتح أي بند تشوف الحسابات اللي فيه. لو أرقام المقارنة ناقصة اكتبها من «تعديل أرقام المقارنة» في الإيضاحات. نزّل القوائم إكسيل وابعتها للمراجع مع الميزان."},
+    {t:"الأصول الثابتة", go:"fa", done: false, optional:true, how:"راجع جدول الحركة ونسب الإهلاك، وارفق فاتورة لكل إضافة في السنة. المراجع بيطلبها دايمًا."},
+    {t:"السياسات المحاسبية", go:"policies", done: false, optional:true, how:"راجع نص الإيضاحات والسياسات، خصوصًا نشاط الشركة والفروع، ونزّلها Word."},
+    {t:"طلبات المراجع ومرفقاتها", go:"requests", done: S.requests.length>0 && reqDone===S.requests.length, how:"لكل طلب في خطاب المراجع: ارفق الملف المطلوب (كشف، تقرير، عقد…)، واكتب ملاحظتك، وغيّر الحالة لـ «جاهز» ثم «تم التسليم». ("+reqDone+" من "+S.requests.length+" جاهزة)"},
+    {t:"المستندات الرسمية", go:"docs", done: S.docs.length>0, optional:true, how:"احفظ السجل التجاري والشهادات والعقود والتراخيص بتواريخ انتهائها. البرنامج بينبهك قبل الانتهاء بـ 60 يوم."},
+    {t:"الخطابات والمصادقات", go:"letters", done: false, optional:true, how:"اختار النموذج (مصادقة عملاء أو موردين أو بنوك، تفويض المراجع، خطاب الإفادات). البرنامج بيختار أكبر الأرصدة حسب نسبة التغطية، وبيطلع خطاب Word لكل طرف."},
+    {t:"التسليم والنسخة الاحتياطية", go:"settings", done: false, optional:true, how:"نزّل «تصدير إكسيل» من أعلى الشاشة (الميزان والمقارنة والتفسيرات وإعادة التبويب ومتابعة الطلبات)، ونزّل القوائم المالية. وخد نسخة احتياطية كاملة من الإعدادات بعد كل جلسة شغل كبيرة."},
+    {t:"آخر السنة: تجهيز السنة الجديدة", go:"fs", done: false, optional:true, how:"بعد ما المراجع يعتمد القوائم، من شاشة القوائم المالية اختار «ترحيل الأرقام الحالية كأرقام مقارنة»، وبعدين غيّر مسميات السنوات من الإعدادات. الدليل والربط بيفضلوا زي ما هم."},
+  ];
+}
+function vStart(){
+  const st = guideSteps(), main = st.filter(x => !x.optional), done = main.filter(x => x.done).length;
+  return `<div class="row between"><h2>ابدأ هنا: خطوات تجهيز المراجعة</h2><span class="chip ${done===main.length?"c-ok":"c-info"}">${done} من ${main.length} خطوات أساسية</span></div>
+  <p class="muted">الترتيب ده هو الأسرع: الدليل والربط بتعملهم مرة واحدة، وبعد كده كل سنة تستورد الميزان وتكمّل باقي الخطوات. اضغط على أي خطوة تروح لشاشتها.</p>
+  <div class="reqs">${st.map((x,i) => `<article class="req ${x.done?"s-sent":""}"><div class="req-h" data-go="${x.go}" style="grid-template-columns:40px minmax(0,1fr) auto">
+    <b class="rn">${i+1}</b><div><b>${esc(x.t)}</b>${x.optional?' <span class="muted small">(حسب الحاجة)</span>':""}<p class="muted small" style="margin-top:4px;line-height:1.8">${esc(x.how)}</p></div>
+    <span class="chip ${x.done?"c-ok":x.optional?"c-mute":"c-warn"}">${x.done?"تم":x.optional?"اختياري":"لسه"}</span></div></article>`).join("")}</div>`;
+}
 // ---------- tabs ----------
 const TABS = [
-  ["summary","الملخص"],["requests","طلبات المراجع"],["compare","الميزان والتنبيهات"],["reclass","إعادة التبويب"],
-  ["map","تبويب الحسابات"],["adj","التسويات"],["fs","القوائم المالية"],["checks","فحوصات المطابقة"],["fa","الأصول الثابتة"],["policies","السياسات المحاسبية"],
+  ["start","ابدأ هنا"],["summary","الملخص"],["requests","طلبات المراجع"],["compare","الميزان والتنبيهات"],["reclass","إعادة التبويب"],
+  ["map","دليل الحسابات"],["adj","التسويات"],["fs","القوائم المالية"],["checks","فحوصات المطابقة"],["fa","الأصول الثابتة"],["policies","السياسات المحاسبية"],
   ["docs","المستندات الرسمية"],["letters","الخطابات والنماذج"],["import","استيراد الميزان"],["settings","الإعدادات"]
 ];
 function renderTabs(){
@@ -1150,7 +1318,7 @@ function render(){
   renderTabs();
   $("#sampleTag").hidden = !S.tb.meta.sample;
   $("#sub").textContent = (C().name ? C().name+" · " : "") + "السنة المالية المنتهية في " + (C().fyEnd||"");
-  const v = {summary:vSummary, requests:vRequests, compare:vCompare, reclass:vReclass, docs:vDocs, letters:vLetters, import:vImport, settings:vSettings, map:vMap, adj:vAdj, fs:vFS, checks:vChecks, fa:vFA, policies:vPolicies}[S.view] || vSummary;
+  const v = {summary:vSummary, requests:vRequests, compare:vCompare, reclass:vReclass, docs:vDocs, letters:vLetters, import:vImport, settings:vSettings, map:vCoa, start:vStart, adj:vAdj, fs:vFS, checks:vChecks, fa:vFA, policies:vPolicies}[S.view] || vSummary;
   $("#app").innerHTML = (S.capsReady && !S.db ? `<div class="banner">الحفظ غير متاح في هذه الشاشة، والتعديلات مؤقتة. افتح البرنامج من رابطه في Claude ليتم الحفظ.</div>` : "") + v();
 }
 
@@ -1572,7 +1740,9 @@ async function applyImport(){
   if (!rows.length){ toast("ما لقيتش حسابات. راجع صف العناوين والأعمدة."); return; }
   const meta = {mode:imp.mode, files:Object.values(imp.src).map(s=>s.fname), importedAt:new Date().toISOString(), glNames};
   await writeTB(meta, rows);
-  S.ui.imp.src = {}; S.view = "compare"; render(); toast("تم حفظ الميزان: "+rows.length+" حساب");
+  S.ui.imp.src = {}; S.view = "compare"; render();
+  const miss = coaOn() ? new Set(rows.filter(r => !S.coa.rows.has(String(r.gl))).map(r => r.gl)).size : 0;
+  toast("تم حفظ الميزان: "+rows.length+" حساب"+(miss ? ". فيه "+miss+" حساب جديد مش في دليل الحسابات، اربطه من شاشة دليل الحسابات." : ""));
 }
 async function writeTB(meta, rows){
   const r2 = v => Math.round(v*100)/100;
@@ -1598,7 +1768,7 @@ async function backupExport(btn){
     const z = new JSZip(), clean = o => JSON.parse(JSON.stringify(o));
     const data = {v:1, at:new Date().toISOString(), settings:S.settings, notes:S.notes, requests:S.requests, docs:S.docs, letters:Object.values(S.letters),
       fsmap:{overrides:S.fs.overrides}, fsprior:S.fs.prior, fa:{rates:S.fs.rates}, faDocs:Object.values(S.fs.faDocs).filter(h => (h.files||[]).length || h.notes),
-      adj:S.fs.adj, policies:Object.values(S.fs.policies), tb:S.tb.meta.sample ? null : {meta:S.tb.meta, rows:S.tb.rows.map(r => [r.gl, r.sub, r.name, r.prior, r.current, r.mdr, r.mcr])}};
+      adj:S.fs.adj, policies:Object.values(S.fs.policies), coa:coaOn() ? {source:(S.coa.meta||{}).source||"", rows:[...S.coa.rows.values()].map(a => [a.code, a.name, a.dr||"", a.cr||"", a.ok?1:0])} : null, tb:S.tb.meta.sample ? null : {meta:S.tb.meta, rows:S.tb.rows.map(r => [r.gl, r.sub, r.name, r.prior, r.current, r.mdr, r.mcr])}};
     const holders = [...S.requests, ...S.docs, ...data.faDocs];
     let n = 0;
     for (const h of holders) for (const f of (h.files||[])){
@@ -1636,6 +1806,7 @@ async function backupImport(file){
     for (const p of d.policies||[]) await save("policies/"+p.id, strip(p));
     await save("app/fsmap", d.fsmap||{overrides:{}}); await save("app/fa", d.fa||{rates:{}});
     if (d.fsprior) await save("app/fsprior", d.fsprior);
+    if (d.coa){ S.coa.rows = new Map(d.coa.rows.map(r => [String(r[0]), {code:String(r[0]), name:r[1], dr:r[2]||"", cr:r[3]||"", ok:!!r[4]}])); S.coa.meta = {...(S.coa.meta||{}), source:d.coa.source}; await saveCoa(true); }
     if (d.tb) await writeTB({...d.tb.meta, importedAt:new Date().toISOString()}, d.tb.rows.map(r => ({gl:r[0], sub:r[1], name:r[2], prior:r[3], current:r[4], mdr:r[5]||0, mcr:r[6]||0})));
     toast("تم استيراد النسخة الاحتياطية"); render();
   }catch(e){ toast("الملف ده مش نسخة احتياطية من البرنامج."); }
@@ -1804,6 +1975,19 @@ app.addEventListener("click", async e => {
   }
   else if (act==="editprior"){ S.ui.editPrior = !S.ui.editPrior; render(); }
   else if (act==="mapedit"){ S.ui.mapEdit = id; render(); }
+  else if (act==="coatb"){ await coaFromTB(); toast("الدليل فيه "+S.coa.rows.size+" حساب. راجع المقترح وأكده."); render(); }
+  else if (act==="coaapply"){ const src = S.ui.coaSrc; S.ui.coaSrc = null; await coaFromRows(src.leaves, src.fname); toast("تم حفظ الدليل: "+S.coa.rows.size+" حساب"); render(); }
+  else if (act==="coacancel"){ S.ui.coaSrc = null; render(); }
+  else if (act==="coaok"){ const a = S.coa.rows.get(id); if (a && a.dr){ a.ok = true; fsCache = null; saveCoa(); render(); } else toast("اختار البند الأول"); }
+  else if (act==="coaokall"){
+    const q = norm(S.ui.mapQ), u = S.ui; let n = 0;
+    S.coa.rows.forEach(a => { if (a.ok || !a.dr) return;
+      if (q && !(norm(a.name).includes(q) || a.code.includes(q))) return;
+      if (u.mapLine && ![a.dr,a.cr].some(s => s && FS_SUB[s] && FS_SUB[s].line===u.mapLine)) return;
+      if (u.mapHow==="bal" && !S.tb.rows.some(r => String(r.gl)===a.code && Math.abs(r.current)>=0.005)) return;
+      a.ok = true; n++; });
+    fsCache = null; saveCoa(); toast("تم تأكيد "+n+" حساب"); render();
+  }
   else if (act==="mapcancel"){ S.ui.mapEdit = null; render(); }
   else if (act==="mapreset"){ delete S.fs.overrides[id]; await save("app/fsmap", {overrides:S.fs.overrides}); render(); }
   else if (act==="adjpreset"){ const p = ADJ_PRESETS[+t.dataset.i]; S.ui.adj = {desc:p[0], type:"adj", lines:p[1].map(([sub]) => ({sub, dr:"", cr:""}))}; render(); }
@@ -1862,6 +2046,16 @@ app.addEventListener("change", async e => {
   if (t.dataset.dfield){ const d = S.docs.find(x=>x.id===t.dataset.id); if (d){ d[t.dataset.dfield] = t.value; saveDoc(d); softRender(); } return; }
   if (t.dataset.note){ S.notes[t.dataset.note] = t.value; saveNotes(); return; }
   if (t.id==="restoreFile"){ const f = t.files[0]; if (f) backupImport(f); return; }
+  if (t.id==="coaFile"){ const f = t.files[0]; if (!f) return;
+    try{ const wb = XLSX.read(await f.arrayBuffer(), {type:"array"}); const src = {fname:f.name, wb, sheet:wb.SheetNames[0]}; coaParse(src); S.ui.coaSrc = src; render(); }
+    catch(_){ toast("تعذرت قراءة الملف."); } return; }
+  if (t.dataset.coa){ const src = S.ui.coaSrc, k = t.dataset.coa; if (k==="sheet"){ src.sheet = t.value; src.cc = src.nc = null; } else src[k] = +t.value; coaParse(src); render(); return; }
+  if (t.dataset.coadr!=null || t.dataset.coacr!=null){
+    const code = t.dataset.coadr ?? t.dataset.coacr; let a = S.coa.rows.get(code);
+    if (!a){ const r = S.tb.rows.find(x => String(x.gl)===code); a = {code, name:(S.tb.meta.glNames||{})[code] || (r&&r.name) || code, dr:"", cr:"", ok:false}; S.coa.rows.set(code, a); }
+    if (t.dataset.coadr!=null) a.dr = t.value; else a.cr = t.value;
+    a.ok = !!a.dr; fsCache = null; saveCoa(); render(); return;
+  }
   if (t.dataset.mapset!=null){ if (t.value){ S.fs.overrides[t.dataset.mapset] = t.value; S.ui.mapEdit = null; await save("app/fsmap", {overrides:S.fs.overrides}); render(); } return; }
   if (t.id==="mapHow"){ S.ui.mapHow = t.value; render(); return; }
   if (t.id==="mapLine"){ S.ui.mapLine = t.value; render(); return; }

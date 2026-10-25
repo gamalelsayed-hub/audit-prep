@@ -1,7 +1,7 @@
 {
   "name": "audit-prep",
   "productName": "AuditPrep",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "تجهيز متطلبات المراجعة الخارجية والقوائم المالية",
   "main": "main.js",
   "author": "GAMAL",
