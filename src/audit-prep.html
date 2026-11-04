@@ -379,7 +379,7 @@ async function initCaps(){
     const meta = s.data(); if (meta.savedAt === S.coa.loadedAt) return;
     try{
       const parts = await Promise.all(Array.from({length:meta.chunks}, (_,i) => db.doc("coa/c"+i).get()));
-      const m = new Map(); parts.forEach(p => { if (p.exists) (p.data().rows||[]).forEach(r => m.set(String(r[0]), {code:String(r[0]), name:r[1], dr:r[2]||"", cr:r[3]||"", ok:!!r[4]})); });
+      const m = new Map(); parts.forEach(p => { if (p.exists) (p.data().rows||[]).forEach(r => m.set(String(r[0]), {code:String(r[0]), name:r[1], dr:r[2]||"", cr:r[3]||"", ok:!!r[4], parent:r[5]||""})); });
       S.coa = {rows:m, meta, loadedAt:meta.savedAt}; fsCache = null; softRender();
     }catch(e){ toast("تعذر تحميل دليل الحسابات."); }
   }, ()=>{});
@@ -858,7 +858,7 @@ function saveCoa(now){
     const meta = {chunks:n, count:rows.length, savedAt:new Date().toISOString(), source:(S.coa.meta && S.coa.meta.source) || ""};
     S.coa.meta = meta; S.coa.loadedAt = meta.savedAt; fsCache = null;
     if (!S.db) return;
-    for (let i=0;i<n;i++) await save("coa/c"+i, {rows:rows.slice(i*CH,(i+1)*CH).map(a => [a.code, a.name, a.dr||"", a.cr||"", a.ok?1:0])});
+    for (let i=0;i<n;i++) await save("coa/c"+i, {rows:rows.slice(i*CH,(i+1)*CH).map(a => [a.code, a.name, a.dr||"", a.cr||"", a.ok?1:0, a.parent||""])});
     for (let i=n;i<oldN;i++) await del("coa/c"+i);
     await save("coa/meta", meta);
   };
@@ -867,11 +867,11 @@ function saveCoa(now){
 }
 function coaFromRows(list, source){
   const m = new Map();
-  list.forEach(([code, name]) => { code = String(code).trim(); if (!code || m.has(code)) return;
+  list.forEach(([code, name, parent]) => { code = String(code).trim(); if (!code || m.has(code)) return;
     const old = S.coa.rows.get(code), ov = S.fs.overrides[code];
-    if (old) m.set(code, {...old, name: name || old.name});
-    else if (ov) m.set(code, {code, name, dr:ov, cr:ov, ok:true});
-    else { const sg = suggestFor(code, name); m.set(code, {code, name, dr:sg.dr, cr:sg.cr===sg.dr ? "" : sg.cr, ok:false}); }
+    if (old) m.set(code, {...old, name: name || old.name, parent: parent || old.parent || ""});
+    else if (ov) m.set(code, {code, name, dr:ov, cr:ov, ok:true, parent:parent||""});
+    else { const sg = suggestFor(code, name); m.set(code, {code, name, dr:sg.dr, cr:sg.cr===sg.dr ? "" : sg.cr, ok:false, parent:parent||""}); }
   });
   S.coa.rows = m; S.coa.meta = {...(S.coa.meta||{}), source};
   return saveCoa(true);
@@ -889,6 +889,17 @@ function coaFromTB(){
   return coaFromRows(hasSubs() ? list : coaLeaves(list), "الميزان");
 }
 function coaParse(s){
+  // a trial balance "بالحسابات التحليلية" (GL line + analytic line) gives the general ledger accounts; analytics follow their GL
+  const t = {wb:s.wb, sheet:s.sheet}; loadSheet(t);
+  if (t.pair && t.map.code>=0){
+    const {rows, glNames} = parseSource(t), seen = new Map();
+    rows.forEach(r => { const g = String(r.gl); if (!/^\d/.test(g)) return; if (!seen.has(g)) seen.set(g, glNames[g] || r.name); });
+    s.aoa = t.aoa; s.headers = t.headers; s.cc = t.map.code; s.nc = t.map.name; s.hdr = t.hdr;
+    s.list = s.leaves = [...seen.entries()].map(([c, n]) => [c, n, ""]);
+    const an = rows.filter(r => r.sub); s.analytic = an.length; s.analyticCodes = new Set(an.map(r => r.sub)).size;
+    return;
+  }
+  s.analytic = 0;
   const aoa = XLSX.utils.sheet_to_json(s.wb.Sheets[s.sheet], {header:1, raw:true, defval:""});
   let hdr = -1, cc = 0, nc = 1;
   for (let i=0;i<Math.min(20,aoa.length);i++){
@@ -906,6 +917,9 @@ function coaParse(s){
   const body = aoa.slice(hdr+1), tc = s.headers.findIndex((_,i) => body.filter(r => /^(فرعي|تحليلي)$/.test(String(r[i]||"").trim())).length > 5);
   if (tc >= 0){ const leaf = new Set(body.filter(r => /^(فرعي|تحليلي)$/.test(String(r[tc]||"").trim())).map(r => String(r[s.cc]).trim())); s.leaves = out.filter(([c]) => leaf.has(c)); }
   else s.leaves = coaLeaves(out);
+  // the nearest main account above each leaf, so the chart shows which group it belongs to
+  const leafSet = new Set(s.leaves.map(([c]) => c)), mains = out.filter(([c]) => !leafSet.has(c));
+  s.leaves = s.leaves.map(([c, n]) => { let best = null; for (const [p, pn] of mains) if (p !== c && c.startsWith(p) && (!best || p.length > best[0].length)) best = [p, pn]; return [c, n, best ? best[0]+" "+best[1] : ""]; });
 }
 
 function vCoa(){
@@ -914,22 +928,26 @@ function vCoa(){
   const missing = [...new Set(F.rows.filter(r => r.how==="missing" && Math.abs(r.current)>=0.005).map(r => r.gl))];
   const unconf = on ? [...S.coa.rows.values()].filter(a => !a.ok).length : 0;
   const src = u.coaSrc;
+  // analytic codes that got into the chart as accounts of their own (e.g. the chart was imported from an analytic trial balance)
+  const tbGl = new Set(S.tb.rows.map(r => String(r.gl))), tbSub = new Set(S.tb.rows.filter(r => r.sub).map(r => String(r.sub)));
+  const stray = on && tbSub.size ? [...S.coa.rows.keys()].filter(c => tbSub.has(c) && !tbGl.has(c)) : [];
   const importPanel = `<div class="panel"><h3>${on ? "تحديث دليل الحسابات" : "ابدأ بدليل الحسابات"}</h3>
     <p class="muted">${on ? `الدليل فيه ${S.coa.rows.size} حساب${S.coa.meta&&S.coa.meta.source?" (من "+esc(S.coa.meta.source)+")":""}. لو استوردته تاني الربط اللي عملته بيفضل زي ما هو، والحسابات الجديدة بتتضاف مقترحة.` : "استورد دليل الحسابات من النظام (إكسيل فيه رقم الحساب واسمه)، أو ابنيه من الميزان الحالي. البرنامج بيقترح البند لكل حساب، وانت بتأكده أو بتغيره مرة واحدة."}</p>
     <div class="row">${typeof XLSX!=="undefined" ? `<label class="btn">استيراد الدليل من إكسيل<input type="file" hidden id="coaFile" accept=".xlsx,.xls,.xlsm,.csv"></label>` : ""}
       ${!S.tb.meta.sample ? `<button class="btn" data-act="coatb">${on?"إضافة حسابات الميزان الناقصة":"بناء الدليل من الميزان الحالي"}</button>` : ""}</div>
+    ${stray.length ? `<div class="banner">فيه ${stray.length} رقم في الدليل هما حسابات تحليلية (زي موظفين وعملاء) مش حسابات عامة، وده بيلخبط الربط. التحليلي بيتبع حسابه العام لوحده. <button class="btn sm" data-act="coastray">شيلهم من الدليل</button></div>` : ""}
     ${src ? `<div class="row"><span class="muted small">${esc(src.fname)}</span>
       <label class="f">الورقة<select data-coa="sheet">${src.wb.SheetNames.map(n=>`<option ${n===src.sheet?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
       <label class="f">عمود رقم الحساب<select data-coa="cc">${src.headers.map((h,i)=>`<option value="${i}" ${i===src.cc?"selected":""}>${esc(h)}</option>`).join("")}</select></label>
       <label class="f">عمود الاسم<select data-coa="nc">${src.headers.map((h,i)=>`<option value="${i}" ${i===src.nc?"selected":""}>${esc(h)}</option>`).join("")}</select></label></div>
-      <p class="muted small">لقيت ${src.list.length} حساب، منها ${src.leaves.length} حساب فرعي (اللي بيتربط). الحسابات الرئيسية (اللي تحتها حسابات) مش محتاجة ربط.${src.list[0]?" أول حساب: "+esc(src.list[0][0]+" "+src.list[0][1]):""}</p>
+      <p class="muted small">${src.analytic ? `الملف ده ميزان بالحسابات التحليلية، فأخدت منه الحسابات العامة بس: ${src.leaves.length} حساب. تحتهم ${src.analytic} حساب تحليلي (${src.analyticCodes} رقم مختلف، والرقم ممكن يتكرر تحت أكتر من حساب عام). كل حساب تحليلي بيتبع ربط حسابه العام، والاستثناءات بتتعمل من «استثناءات الحسابات التحليلية» بعد استيراد الميزان.` : `لقيت ${src.list.length} حساب، منها ${src.leaves.length} حساب فرعي (اللي بيتربط). الحسابات الرئيسية (اللي تحتها حسابات) مش محتاجة ربط.`}${src.list[0]?" أول حساب: "+esc(src.list[0][0]+" "+src.list[0][1]):""}</p>
       <div class="row"><button class="btn primary" data-act="coaapply" ${src.leaves.length?"":"disabled"}>حفظ الدليل</button><button class="btn link" data-act="coacancel">إلغاء</button></div>` : ""}
   </div>`;
   let rows;
   if (lvl==="sub"){
-    rows = F.rows.map(r => ({code:r.gl+(r.sub?" / "+r.sub:""), key:r.gl+(r.sub?"/"+r.sub:""), gl:r.gl, sub:r.sub, name:r.name, glName:r.glName, bal:r.current, cur:r.fs, how:r.how}));
+    rows = F.rows.map(r => ({code:r.sub||r.gl, key:r.gl+(r.sub?"/"+r.sub:""), gl:r.gl, sub:r.sub, name:r.name, glName:r.glName, bal:r.current, cur:r.fs, how:r.how}));
   } else if (on){
-    rows = [...S.coa.rows.values()].map(a => ({code:a.code, key:a.code, gl:a.code, name:a.name, bal:bal.get(a.code), dr:a.dr, cr:a.cr, how:a.ok?"coa":"suggested"}));
+    rows = [...S.coa.rows.values()].map(a => ({code:a.code, key:a.code, gl:a.code, name:a.name, parent:a.parent||"", bal:bal.get(a.code), dr:a.dr, cr:a.cr, how:a.ok?"coa":"suggested"}));
     missing.forEach(g => { const r = F.rows.find(x => x.gl===g); rows.push({code:g, key:g, gl:g, name:r.glName||r.name, bal:bal.get(g), how:"missing"}); });
   } else {
     const m = new Map();
@@ -937,7 +955,7 @@ function vCoa(){
     rows = [...m.values()].map(g => ({...g, list:[...g.subs], how: S.fs.overrides[g.gl] ? "manual" : g.hows.has("guess") ? "guess" : "rule"}));
   }
   const q = norm(u.mapQ);
-  if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")).includes(q) || String(r.key).includes(q));
+  if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")+" "+(r.parent||"")).includes(q) || String(r.key).includes(q));
   if (u.mapHow==="todo") rows = rows.filter(r => ["suggested","missing","guess"].includes(r.how));
   else if (u.mapHow==="bal") rows = rows.filter(r => Math.abs(r.bal||0)>=0.005);
   else if (u.mapHow==="manual") rows = rows.filter(r => r.how==="manual");
@@ -948,6 +966,11 @@ function vCoa(){
     manual:'<span class="chip c-info">استثناء يدوي</span>', guess:'<span class="chip c-warn">تخمين</span>', rule:'<span class="chip c-mute">تلقائي</span>'})[h] || "";
   const sel = (attr, v, blank) => `<select ${attr}><option value="">${blank}</option>${subOptions(v||"")}</select>`;
   const todoN = on ? unconf + missing.length : 0;
+  // which main account each chart row sits under, and how many analytic accounts each GL has in the trial balance
+  const showParent = lvl==="gl" && on && [...S.coa.rows.values()].some(a => a.parent);
+  const subCount = new Map(); if (lvl==="gl") S.tb.rows.forEach(r => { if (r.sub) subCount.set(String(r.gl), (subCount.get(String(r.gl))||0)+1); });
+  const pcell = r => showParent ? `<td class="small">${esc(r.parent||"")}</td>` : "";
+  const ccell = r => subCount.size ? `<td>${subCount.get(String(r.gl)) ? `<button class="btn sm link" data-act="mapsubs" data-id="${esc(r.gl)}">${subCount.get(String(r.gl))} حساب</button>` : ""}</td>` : "";
   return `<div class="row between"><h2>دليل الحسابات وربطه بالقوائم</h2>
     <div class="row">${hasSubs() ? `<div class="seg" role="group"><button data-mlevel="gl" aria-pressed="${lvl==="gl"}">${on?"الدليل":"الحساب العام"}</button><button data-mlevel="sub" aria-pressed="${lvl==="sub"}">استثناءات الحسابات التحليلية</button></div>` : ""}</div></div>
   ${on && todoN ? `<div class="banner">${missing.length?missing.length+" حساب في الميزان مش موجود في الدليل، وأرصدتهم مش داخلة القوائم لحد ما تربطهم. ":""}${unconf?unconf+" حساب في الدليل ربطه مقترح ولسه ما اتأكدش.":""}</div>` : ""}
@@ -956,20 +979,20 @@ function vCoa(){
     <select id="mapHow"><option value="all">كل الحسابات</option><option value="todo" ${u.mapHow==="todo"?"selected":""}>محتاجة مراجعة</option><option value="bal" ${u.mapHow==="bal"?"selected":""}>اللي ليها رصيد</option>${lvl==="sub"?`<option value="manual" ${u.mapHow==="manual"?"selected":""}>الاستثناءات</option>`:""}</select>
     <select id="mapLine"><option value="">كل البنود</option>${FS_LINES.map(l=>`<option value="${l.id}" ${u.mapLine===l.id?"selected":""}>${esc(l.t)}</option>`).join("")}</select>
     ${on && lvl==="gl" && rows.some(r => r.how==="suggested") ? `<button class="btn" data-act="coaokall">تأكيد المقترح للحسابات الظاهرة (${rows.filter(r=>r.how==="suggested").length})</button>` : ""}</div>
-  <div class="tbl"><table><thead><tr><th>الرقم</th><th>اسم الحساب</th><th class="n">الرصيد ${esc(A().currentLabel)}</th>
+  <div class="tbl"><table><thead><tr>${lvl==="sub" ? `<th>الحساب العام</th><th>رقم التحليلي</th><th>اسم التحليلي</th>` : `${showParent ? "<th>الحساب الرئيسي</th>" : ""}<th>الرقم</th><th>اسم الحساب</th>${subCount.size ? "<th>التحليلي</th>" : ""}`}<th class="n">الرصيد ${esc(A().currentLabel)}</th>
     ${on && lvl==="gl" ? `<th>البند لو الرصيد مدين</th><th>البند لو الرصيد دائن</th>` : `<th>البند في القوائم</th>`}<th>الحالة</th><th></th></tr></thead><tbody>
   ${shown.map(r => {
     const editing = u.mapEdit===r.key;
     if (on && lvl==="gl"){
       const a = S.coa.rows.get(r.code) || {};
-      return `<tr><td class="code">${esc(r.code)}</td><td>${esc(r.name)}</td><td class="n">${r.bal==null?"":fmt(r.bal)}</td>
+      return `<tr>${pcell(r)}<td class="code">${esc(r.code)}</td><td>${esc(r.name)}</td>${ccell(r)}<td class="n">${r.bal==null?"":fmt(r.bal)}</td>
         <td>${editing ? sel(`data-coadr="${esc(r.code)}"`, a.dr, "اختر البند") : esc(subLabel(r.dr))}</td>
         <td>${editing ? sel(`data-coacr="${esc(r.code)}"`, a.cr, "نفس بند المدين") : r.cr ? esc(subLabel(r.cr)) : r.dr ? '<span class="muted small">نفس بند المدين</span>' : ""}</td>
         <td>${chip(r.how)}</td>
         <td style="white-space:nowrap">${editing ? `<button class="btn sm link" data-act="mapcancel">تم</button>` : `<button class="btn sm link" data-act="mapedit" data-id="${esc(r.key)}">${r.how==="missing"?"ربط":"تغيير"}</button>`}${r.how==="suggested" ? `<button class="btn sm link" data-act="coaok" data-id="${esc(r.code)}">تأكيد</button>` : ""}</td></tr>`;
     }
     const ovk = lvl==="sub" ? r.key : r.gl, ov = S.fs.overrides[ovk];
-    return `<tr><td class="code">${esc(r.code)}</td><td>${esc(r.name)}${lvl==="sub"&&r.glName?`<div class="muted small">${esc(r.glName)}</div>`:""}</td><td class="n">${fmt(r.bal||0)}</td>
+    return `<tr>${lvl==="sub" ? `<td><span class="code">${esc(r.gl)}</span> ${esc(r.glName||"")}</td><td class="code">${r.sub?esc(r.sub):'<span class="muted small">بدون تحليلي</span>'}</td><td>${r.sub?esc(r.name):""}</td>` : `${pcell(r)}<td class="code">${esc(r.code)}</td><td>${esc(r.name)}</td>${ccell(r)}`}<td class="n">${fmt(r.bal||0)}</td>
       <td>${editing ? sel(`data-mapset="${esc(ovk)}"`, ov, "اختر البند") : (r.list||[r.cur]).filter(Boolean).map(s => esc(subLabel(s))).join("<br>")}</td>
       <td>${chip(r.how)}</td>
       <td style="white-space:nowrap">${editing ? `<button class="btn sm link" data-act="mapcancel">إلغاء</button>` : `<button class="btn sm link" data-act="mapedit" data-id="${esc(r.key)}">تغيير</button>`}${ov ? `<button class="btn sm link" data-act="mapreset" data-id="${esc(ovk)}">${lvl==="sub"?"إلغاء الاستثناء":"رجوع للتلقائي"}</button>` : ""}</td></tr>`;
@@ -1828,7 +1851,7 @@ async function backupExport(btn){
     const z = new JSZip(), clean = o => JSON.parse(JSON.stringify(o));
     const data = {v:1, at:new Date().toISOString(), settings:S.settings, notes:S.notes, requests:S.requests, docs:S.docs, letters:Object.values(S.letters),
       fsmap:{overrides:S.fs.overrides}, fsprior:S.fs.prior, fa:{rates:S.fs.rates}, faDocs:Object.values(S.fs.faDocs).filter(h => (h.files||[]).length || h.notes),
-      adj:S.fs.adj, policies:Object.values(S.fs.policies), coa:coaOn() ? {source:(S.coa.meta||{}).source||"", rows:[...S.coa.rows.values()].map(a => [a.code, a.name, a.dr||"", a.cr||"", a.ok?1:0])} : null, tb:S.tb.meta.sample ? null : {meta:S.tb.meta, rows:S.tb.rows.map(r => [r.gl, r.sub, r.name, r.prior, r.current, r.mdr, r.mcr])}};
+      adj:S.fs.adj, policies:Object.values(S.fs.policies), coa:coaOn() ? {source:(S.coa.meta||{}).source||"", rows:[...S.coa.rows.values()].map(a => [a.code, a.name, a.dr||"", a.cr||"", a.ok?1:0, a.parent||""])} : null, tb:S.tb.meta.sample ? null : {meta:S.tb.meta, rows:S.tb.rows.map(r => [r.gl, r.sub, r.name, r.prior, r.current, r.mdr, r.mcr])}};
     const holders = [...S.requests, ...S.docs, ...data.faDocs];
     let n = 0;
     for (const h of holders) for (const f of (h.files||[])){
@@ -1866,7 +1889,7 @@ async function backupImport(file){
     for (const p of d.policies||[]) await save("policies/"+p.id, strip(p));
     await save("app/fsmap", d.fsmap||{overrides:{}}); await save("app/fa", d.fa||{rates:{}});
     if (d.fsprior) await save("app/fsprior", d.fsprior);
-    if (d.coa){ S.coa.rows = new Map(d.coa.rows.map(r => [String(r[0]), {code:String(r[0]), name:r[1], dr:r[2]||"", cr:r[3]||"", ok:!!r[4]}])); S.coa.meta = {...(S.coa.meta||{}), source:d.coa.source}; await saveCoa(true); }
+    if (d.coa){ S.coa.rows = new Map(d.coa.rows.map(r => [String(r[0]), {code:String(r[0]), name:r[1], dr:r[2]||"", cr:r[3]||"", ok:!!r[4], parent:r[5]||""}])); S.coa.meta = {...(S.coa.meta||{}), source:d.coa.source}; await saveCoa(true); }
     if (d.tb) await writeTB({...d.tb.meta, importedAt:new Date().toISOString()}, d.tb.rows.map(r => ({gl:r[0], sub:r[1], name:r[2], prior:r[3], current:r[4], mdr:r[5]||0, mcr:r[6]||0})));
     toast("تم استيراد النسخة الاحتياطية"); render();
   }catch(e){ toast("الملف ده مش نسخة احتياطية من البرنامج."); }
@@ -1989,6 +2012,7 @@ app.addEventListener("click", async e => {
   if (t.dataset.level){ S.ui.level = t.dataset.level; render(); return; }
   if (t.dataset.fsv){ S.ui.fsView = t.dataset.fsv; render(); return; }
   if (t.dataset.mlevel){ S.ui.mapLevel = t.dataset.mlevel; S.ui.mapEdit = null; render(); return; }
+  if (t.dataset.act==="mapsubs"){ S.ui.mapLevel = "sub"; S.ui.mapQ = t.dataset.id+"/"; S.ui.mapHow = "all"; S.ui.mapEdit = null; render(); return; }
   if (t.dataset.mode){ S.ui.imp = {mode:t.dataset.mode, src:{}}; render(); return; }
   if (t.dataset.ph){ const ta = $("#lt-body"); const p = ta.selectionStart||ta.value.length; ta.value = ta.value.slice(0,p)+"{"+t.dataset.ph+"}"+ta.value.slice(p); saveLetterBody(ta.value); return; }
   const act = t.dataset.act, id = t.dataset.id;
@@ -2046,6 +2070,11 @@ app.addEventListener("click", async e => {
   else if (act==="coatb"){ await coaFromTB(); toast("الدليل فيه "+S.coa.rows.size+" حساب. راجع المقترح وأكده."); render(); }
   else if (act==="coaapply"){ const src = S.ui.coaSrc; S.ui.coaSrc = null; await coaFromRows(src.leaves, src.fname); toast("تم حفظ الدليل: "+S.coa.rows.size+" حساب"); render(); }
   else if (act==="coacancel"){ S.ui.coaSrc = null; render(); }
+  else if (act==="coastray"){
+    const tbGl = new Set(S.tb.rows.map(r => String(r.gl))), tbSub = new Set(S.tb.rows.filter(r => r.sub).map(r => String(r.sub)));
+    let n = 0; [...S.coa.rows.keys()].forEach(c => { if (tbSub.has(c) && !tbGl.has(c)){ S.coa.rows.delete(c); n++; } });
+    await saveCoa(true); toast("اتشال "+n+" حساب تحليلي من الدليل. الدليل فيه دلوقتي "+S.coa.rows.size+" حساب."); render();
+  }
   else if (act==="coaok"){ const a = S.coa.rows.get(id); if (a && a.dr){ a.ok = true; fsCache = null; saveCoa(); render(); } else toast("اختار البند الأول"); }
   else if (act==="coaokall"){
     const q = norm(S.ui.mapQ), u = S.ui; let n = 0;
