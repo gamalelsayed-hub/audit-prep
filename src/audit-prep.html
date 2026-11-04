@@ -116,19 +116,47 @@ textarea.ex{min-width:180px;min-height:34px;font-size:13px}
 .preview{white-space:pre-wrap;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:20px 24px;font-size:14px;line-height:1.9}
 .ph{font-size:12px;font-family:var(--f-body);border:1px solid var(--rule-strong);background:var(--paper);color:var(--ink);border-radius:4px;padding:1px 6px;cursor:pointer}
 @media (max-width:560px){.req-h{grid-template-columns:30px minmax(0,1fr)}.rs{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+/* navigation: a column on the right on wide screens, a scrolling strip on narrow ones */
+.shell{display:flex;flex-direction:column}
+.shell>main{flex:1;min-width:0;width:100%}
+@media (min-width:900px){
+  .shell{flex-direction:row;align-items:flex-start}
+  #tabs{flex-direction:column;gap:2px;position:sticky;top:var(--hh,64px);width:200px;flex:0 0 200px;height:calc(100vh - var(--hh,64px));overflow-y:auto;
+    padding:14px 10px;background:var(--sheet);border-inline-end:1px solid var(--rule)}
+  #tabs button{text-align:start;border-bottom:0;border-inline-start:3px solid transparent;border-radius:6px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between}
+  #tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);border-inline-start-color:var(--accent);font-weight:600}
+  #tabs button:hover:not([aria-selected="true"]){background:var(--paper);color:var(--ink)}
+}
+@media (max-width:899px){#tabs{position:sticky;top:var(--hh,64px);z-index:4;background:var(--sheet);border-bottom:1px solid var(--rule);padding:4px 16px 0}}
+.tfrow{display:flex;gap:8px;align-items:center;margin-bottom:-6px}
+.tfrow input{width:260px}
+.filters{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end}
+.filters label.f select,.filters label.f input{min-width:150px}
+@media print{
+  header,#tabs,.tfrow,.toast,button,.btn,input[type=file],.seg{display:none!important}
+  body{background:#fff;color:#000} main{padding:0} .panel,.tbl{border-color:#bbb}
+  .tbl{max-height:none!important;overflow:visible!important} th{position:static}
+  textarea,input,select{border:0!important;background:none!important;resize:none;font:inherit;color:#000;appearance:none}
+  tr{break-inside:avoid}
+}
 </style>
 
 <header>
   <div class="wrap">
     <div class="hd">
       <div class="brand"><h1>ملف المراجعة المسبق</h1><span id="sub">تجهيز متطلبات المراجع الخارجي قبل استلام الميزان</span></div>
-      <div class="meta"><span class="sample" id="sampleTag" hidden>لم يُستورد ميزان بعد</span><button class="btn sm" id="exportBtn" hidden>تصدير إكسيل</button></div>
+      <div class="meta"><span class="sample" id="sampleTag" hidden>لم يُستورد ميزان بعد</span>
+        <button class="btn sm" id="scrXlsx" hidden title="الجداول اللي في الشاشة دي بالفلاتر الحالية">إكسيل للشاشة دي</button>
+        <button class="btn sm" id="scrPdf" title="الشاشة دي كلها بالفلاتر الحالية">PDF للشاشة دي</button>
+        <button class="btn sm" id="exportBtn" hidden title="ملف المراجع الكامل: الميزان والمقارنة والتفسيرات وإعادة التبويب والطلبات">ملف المراجع الكامل (إكسيل)</button></div>
     </div>
-    <nav role="tablist" id="tabs"></nav>
   </div>
 </header>
 
-<main class="wrap" id="app"></main>
+<div class="shell">
+  <nav role="tablist" id="tabs" aria-label="الشاشات"></nav>
+  <main class="wrap" id="app"></main>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -961,7 +989,7 @@ function vCoa(){
   else if (u.mapHow==="manual") rows = rows.filter(r => r.how==="manual");
   if (u.mapLine) rows = rows.filter(r => [r.dr, r.cr, r.cur, ...(r.list||[])].some(s => s && FS_SUB[s] && FS_SUB[s].line===u.mapLine));
   rows.sort((a,b) => (a.how==="missing"?0:1)-(b.how==="missing"?0:1) || String(a.code).localeCompare(String(b.code),"en",{numeric:true}));
-  const shown = rows.slice(0, 500);
+  const shown = rows.slice(0, S.exportAll ? Infinity : 500);
   const chip = h => ({coa:'<span class="chip c-ok">مؤكد</span>', suggested:'<span class="chip c-warn">مقترح</span>', missing:'<span class="chip c-crit">مش في الدليل</span>',
     manual:'<span class="chip c-info">استثناء يدوي</span>', guess:'<span class="chip c-warn">تخمين</span>', rule:'<span class="chip c-mute">تلقائي</span>'})[h] || "";
   const sel = (attr, v, blank) => `<select ${attr}><option value="">${blank}</option>${subOptions(v||"")}</select>`;
@@ -1002,10 +1030,13 @@ function vCoa(){
 
 let fsCache = null;
 function fsCompute(){
-  const key = (S.tb.meta.importedAt||"sample")+"|"+JSON.stringify(S.fs.overrides)+"|"+JSON.stringify(S.fs.adj)+"|"+(S.coa.loadedAt||"")+"|"+S.coa.rows.size;
+  const key = (S.tb.meta.importedAt||"sample")+"|"+JSON.stringify(S.fs.overrides)+"|"+JSON.stringify(S.fs.adj)+"|"+(S.coa.loadedAt||"")+"|"+S.coa.rows.size+"|"+JSON.stringify(S.fs.prior||"");
   if (fsCache && fsCache.key===key) return fsCache;
-  const rows = fsRows(), base = {}, src = {}, mov = {};
-  Object.keys(FS_SUB).forEach(k => { base[k] = 0; src[k] = []; mov[k] = {open:0, dr:0, cr:0}; });
+  const rows = fsRows(), base = {}, src = {}, mov = {}, tbPrior = {};
+  Object.keys(FS_SUB).forEach(k => { base[k] = 0; src[k] = []; mov[k] = {open:0, dr:0, cr:0}; tbPrior[k] = 0; });
+  // comparatives straight from the prior-year balances in the trial balance, mapped the same way (sign decides debit/credit line)
+  rows.forEach(r => { if (Math.abs(r.prior)<0.005) return; const m = mapHow({...r, current:r.prior}); if (m.s && m.s in tbPrior) tbPrior[m.s] += r.prior; });
+  const hasTbPrior = !S.tb.meta.sample && Object.values(tbPrior).some(x => Math.abs(x)>=0.5);
   rows.forEach(r => {
     const m = mapHow(r); r.fs = m.s; r.how = m.how;
     if (!m.s || !(m.s in base)) return;
@@ -1014,11 +1045,12 @@ function fsCompute(){
   });
   const v = {...base}, adjBySub = {};
   S.fs.adj.forEach(a => (a.lines||[]).forEach(l => { if (!(l.sub in v)) return; const d = (+l.dr||0) - (+l.cr||0); v[l.sub] += d; adjBySub[l.sub] = (adjBySub[l.sub]||0) + d; }));
-  const prior = S.fs.prior || DRAFT_PRIOR;
+  const tbLabel = S.tb.meta.mode==="single" ? "أرصدة أول المدة في الميزان (الإيرادات والمصروفات صفر لأن الملف واحد)" : "ميزان "+A().priorLabel;
+  const prior = S.fs.prior || (hasTbPrior ? {label:A().priorLabel, oci:0, source:tbLabel, v:tbPrior, fromTB:true} : DRAFT_PRIOR);
   const pv = {}; Object.keys(FS_SUB).forEach(k => pv[k] = +(prior.v||{})[k] || 0);
   const st = statements(v), pst = statements(pv);
   st.oci = -(v.reval - pv.reval); pst.oci = +prior.oci || 0;
-  fsCache = {key, rows, base, v, pv, src, mov, adjBySub, st, pst, prior};
+  fsCache = {key, rows, base, v, pv, src, mov, adjBySub, st, pst, prior, hasTbPrior};
   return fsCache;
 }
 
@@ -1097,7 +1129,7 @@ function vNotes(F){
   const a = A(), ed = S.ui.editPrior;
   const notes = FS_LINES.filter(l => l.subs.length>1 || l.note).filter(l => l.subs.some(([id]) => Math.abs(F.v[id])>=0.5 || Math.abs(F.pv[id])>=0.5));
   return `<p class="muted">كل بند بتفاصيله وأرقام المقارنة. افتح أي سطر لترى الحسابات اللي تكوّنه. ${ed?"اكتب أرقام المقارنة بالموجب كما تظهر في القوائم.":""}
-    <button class="btn sm link" data-act="editprior">${ed?"إنهاء تعديل أرقام المقارنة":"تعديل أرقام المقارنة"}</button></p>
+    <button class="btn sm link" data-act="editprior">${ed?"إنهاء تعديل أرقام المقارنة":"تعديل أرقام المقارنة"}</button>${S.fs.prior && F.hasTbPrior ? `<button class="btn sm link" data-act="priortb">استخدم أرقام ميزان ${esc(a.priorLabel)} بدل الأرقام المكتوبة</button>` : ""}</p>
   ${notes.map(l => {
     const tc = l.subs.reduce((s,[id])=>s+pres(id,F.v[id]),0), tp = l.subs.reduce((s,[id])=>s+pres(id,F.pv[id]),0);
     return `<div class="panel"><h3>${l.note?"إيضاح "+esc(l.note)+" - ":""}${esc(l.t)}</h3>
@@ -1327,6 +1359,78 @@ function render(){
   $("#sub").textContent = (C().name ? C().name+" · " : "") + "السنة المالية المنتهية في " + (C().fyEnd||"");
   const v = {summary:vSummary, requests:vRequests, compare:vCompare, reclass:vReclass, docs:vDocs, letters:vLetters, import:vImport, settings:vSettings, map:vCoa, start:vStart, adj:vAdj, fs:vFS, checks:vChecks, fa:vFA, policies:vPolicies}[S.view] || vSummary;
   $("#app").innerHTML = (S.capsReady && !S.db ? `<div class="banner">الحفظ غير متاح في هذه الشاشة، والتعديلات مؤقتة. افتح البرنامج من رابطه في Claude ليتم الحفظ.</div>` : "") + v();
+  addTableFilters();
+  $("#scrXlsx").hidden = !S.downloads || typeof XLSX==="undefined";
+}
+// a quick filter above every table with more than a few rows; typing hides the rows that don't contain the text
+function addTableFilters(){
+  const tf = S.ui.tf || (S.ui.tf = {});
+  $("#app").querySelectorAll(".tbl").forEach((box, i) => {
+    const body = box.querySelectorAll("tbody tr:not(.tot)"); if (body.length < 8) return;
+    const k = S.view+":"+i, row = document.createElement("div"); row.className = "tfrow";
+    row.innerHTML = `<input type="text" data-tf="${k}" placeholder="فلتر الجدول ده: اكتب أي كلمة أو رقم" value="${esc(tf[k]||"")}"><span class="muted small" data-tfn="${k}"></span>`;
+    box.before(row); if (tf[k]) applyTableFilter(k);
+  });
+}
+function applyTableFilter(k){
+  const inp = $(`[data-tf="${CSS.escape(k)}"]`); if (!inp) return;
+  const box = inp.parentElement.nextElementSibling, q = norm(inp.value).replace(/,/g,"");
+  let n = 0, all = 0;
+  box.querySelectorAll("tbody tr:not(.tot)").forEach(tr => {
+    const txt = norm(tr.textContent + " " + [...tr.querySelectorAll("textarea,input,select")].map(x => x.value).join(" ")).replace(/,/g,"");
+    const ok = !q || txt.includes(q); tr.hidden = !ok; all++; if (ok) n++;
+  });
+  const lab = $(`[data-tfn="${CSS.escape(k)}"]`); if (lab) lab.textContent = q ? `${n} من ${all} صف` : "";
+}
+const setHH = () => document.documentElement.style.setProperty("--hh", $("header").offsetHeight+"px");
+window.addEventListener("resize", setHH); setTimeout(setHH, 0);
+
+// ---------- export the current screen ----------
+const VIEW_T = () => Object.fromEntries(TABS);
+function screenTitle(){ return (VIEW_T()[S.view]||"شاشة") + (C().name ? " - "+C().name : "") + " " + (A().currentLabel||""); }
+// render the screen with every row (no display caps), run f on that DOM, then restore
+async function withFullScreen(f){
+  S.exportAll = true; render(); try{ return await f(); } finally { S.exportAll = false; render(); }
+}
+function cellNum(t){
+  t = String(t||"").trim(); if (t==="-") return 0;
+  const m = t.match(/^\(?-?[\d,]+(\.\d+)?\)?%?$/); if (!m) return null;
+  let v = parseFloat(t.replace(/[(),%]/g,"")); if (/^\(.*\)%?$/.test(t)) v = -v; return isNaN(v) ? null : v;
+}
+async function screenXlsx(){
+  await withFullScreen(async () => {
+    const tables = [...$("#app").querySelectorAll(".tbl table")];
+    if (!tables.length){ toast("الشاشة دي مافيهاش جداول. استخدم «PDF للشاشة دي»."); return; }
+    const wb = XLSX.utils.book_new(); wb.Workbook = {Views:[{RTL:true}]}; const used = new Set();
+    tables.forEach((tb, i) => {
+      const c = tb.cloneNode(true);
+      // rows hidden by a table filter stay out of the file
+      [...tb.querySelectorAll("tr")].forEach((tr, j) => { if (tr.hidden) c.querySelectorAll("tr")[j].dataset.drop = "1"; });
+      c.querySelectorAll('tr[data-drop="1"]').forEach(x => x.remove());
+      c.querySelectorAll("textarea,input,select").forEach(x => { const sp = document.createElement("span"); sp.textContent = x.tagName==="SELECT" ? (x.selectedOptions[0]||{}).textContent||"" : x.type==="checkbox" ? (x.checked?"✓":"") : x.value; x.replaceWith(sp); });
+      c.querySelectorAll("button,.btn").forEach(x => x.remove());
+      // keep a separator where the screen shows text on separate lines (account name over GL name, several chips)
+      c.querySelectorAll("td div, td br").forEach(x => { const pv = x.previousSibling; if (x.tagName==="BR" || (x.textContent.trim() && pv && pv.textContent.trim())) x.before(" - "); }); c.querySelectorAll(".chip + .chip").forEach(x => x.before(" · "));
+      c.querySelectorAll("details").forEach(d => { const sm = d.querySelector("summary"); d.replaceWith(document.createTextNode(sm ? sm.textContent : d.textContent)); });
+      c.querySelectorAll("td,th").forEach(td => { const t = td.textContent.trim(); if (/%$|^جديد$/.test(t)){ td.setAttribute("data-t","s"); td.setAttribute("data-v", t); return; }
+        const v = cellNum(t); if (v!=null && td.classList.contains("n")){ td.setAttribute("data-t","n"); td.setAttribute("data-v", String(v)); } else if (td.tagName==="TD"){ td.setAttribute("data-t","s"); td.setAttribute("data-v", t); } });
+      const ws = XLSX.utils.table_to_sheet(c, {raw:false});
+      ws["!cols"] = [...(c.querySelector("tr")||{children:[]}).children].map(() => ({wch:18}));
+      let h = tb.closest(".panel")?.querySelector("h3")?.textContent || $("#app h2")?.textContent || "جدول";
+      let nm = (tables.length>1 ? (i+1)+" " : "") + h.replace(/[\\/?*\[\]:]/g," ").trim(); nm = nm.slice(0,31) || "جدول "+(i+1);
+      while (used.has(nm)) nm = (nm.slice(0,28)+" "+(i+1)).slice(0,31); used.add(nm);
+      XLSX.utils.book_append_sheet(wb, ws, nm);
+    });
+    await saveFile(screenTitle()+".xlsx", XLSX.write(wb, {bookType:"xlsx", type:"array"}));
+  });
+}
+async function screenPdf(){
+  const name = screenTitle()+".pdf";
+  if (S.local && S.local.savePdf){ await withFullScreen(async () => { await new Promise(r => setTimeout(r, 50)); const ok = await S.local.savePdf(name); if (ok) toast("تم حفظ الـ PDF"); }); return; }
+  S.exportAll = true; render();
+  const done = () => { window.removeEventListener("afterprint", done); S.exportAll = false; render(); };
+  window.addEventListener("afterprint", done);
+  try{ window.print(); toast("من نافذة الطباعة اختار «Save as PDF» أو «حفظ كـ PDF»."); }catch(e){ done(); toast("الطباعة مش متاحة هنا. استخدم نسخة الويندوز للـ PDF."); }
 }
 
 // ---------- views ----------
@@ -1531,7 +1635,26 @@ function vCompare(){
   const q = norm(f.q);
   if (q) rows = rows.filter(r => norm(r.name+" "+(r.glName||"")).includes(q) || String(r.code).includes(q));
   if (f.flagged) rows = rows.filter(r => r.flags.length);
-  const shown = rows.slice(0, 1500);
+  const cf = f.cmp || (f.cmp = {gl:"", type:"", cls:"", min:"", note:""});
+  if (cf.gl) rows = rows.filter(r => String(r.gl)===cf.gl);
+  if (cf.cls) rows = rows.filter(r => String(r.gl).startsWith(cf.cls));
+  if (cf.type) rows = rows.filter(r => r.flags.some(x => x.t===cf.type));
+  if (+cf.min) rows = rows.filter(r => Math.max(Math.abs(r.current), Math.abs(r.prior), Math.abs(r.diff)) >= +cf.min);
+  if (cf.note==="yes") rows = rows.filter(r => (S.notes[(level==="gl"?"G:":"A:")+r.key]||"").trim());
+  else if (cf.note==="no") rows = rows.filter(r => r.flags.length && !(S.notes[(level==="gl"?"G:":"A:")+r.key]||"").trim());
+  const filtered = !!(q || f.flagged || cf.gl || cf.cls || cf.type || +cf.min || cf.note);
+  const fsum = rows.reduce((t,r) => (t.p += r.prior, t.c += r.current, t), {p:0, c:0});
+  const glNames = S.tb.meta.glNames || {}, glList = [...new Set(S.tb.rows.map(r => String(r.gl)))].sort((x,y)=>x.localeCompare(y,"en",{numeric:true}));
+  const CLS = [["1","الأصول"],["2","الخصوم"],["3","حقوق الملكية"],["4","الإيرادات"],["5","المصروفات"]];
+  const TYPES = [["jump","زيادة أو انخفاض غير طبيعي"],["new","حساب جديد"],["closed","رصيده صفر هذا العام"],["flip","انعكست طبيعة الرصيد"],["contra","رصيد معاكس"]];
+  const cmpFilters = `<div class="filters">
+    <label class="f">الحساب<select data-cmp="gl" id="cmp-gl"><option value="">كل الحسابات</option>${glList.map(g => `<option value="${esc(g)}" ${cf.gl===g?"selected":""}>${esc(g+" "+(glNames[g]||""))}</option>`).join("")}</select></label>
+    <label class="f">المجموعة<select data-cmp="cls" id="cmp-cls"><option value="">الكل</option>${CLS.map(([k,l]) => `<option value="${k}" ${cf.cls===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="f">نوع التنبيه<select data-cmp="type" id="cmp-type"><option value="">الكل</option>${TYPES.map(([k,l]) => `<option value="${k}" ${cf.type===k?"selected":""}>${l}</option>`).join("")}</select></label>
+    <label class="f">التفسير<select data-cmp="note" id="cmp-note"><option value="">الكل</option><option value="no" ${cf.note==="no"?"selected":""}>تنبيهات من غير تفسير</option><option value="yes" ${cf.note==="yes"?"selected":""}>متفسرة</option></select></label>
+    <label class="f">أقل مبلغ<input type="number" data-cmp="min" id="cmp-min" value="${esc(cf.min)}" placeholder="0"></label>
+    ${filtered ? `<button class="btn sm link" data-act="cmpclear">مسح الفلاتر</button>` : ""}</div>`;
+  const shown = rows.slice(0, S.exportAll ? Infinity : 1500);
   const sums = tbSums();
   const nk = r => (level==="gl"?"G:":"A:")+r.key;
   const single = S.tb.meta.mode==="single";
@@ -1544,6 +1667,7 @@ function vCompare(){
       <label class="row" style="gap:6px"><input type="checkbox" id="onlyFlag" ${f.flagged?"checked":""}> التنبيهات فقط</label>
     </div>
   </div>
+  ${cmpFilters}
   <p class="muted">الأرصدة الدائنة بين قوسين. اكتب تفسير كل تنبيه في عمود التفسير، وهيطلع في ملف الإكسيل للمراجع.${single?" الميزان مستورد من ملف واحد، فرصيد أول المدة لحسابات قائمة الدخل صفر؛ لمقارنة الإيرادات والمصروفات استورد ميزان العام السابق كملف ثاني.":""}</p>
   <div class="tbl"><table>
     <thead><tr><th>الرقم</th><th>اسم الحساب</th><th class="n">${esc(a.priorLabel)}</th><th class="n">${esc(a.currentLabel)}</th><th class="n">التغير</th><th class="n">%</th><th>التنبيه</th><th style="min-width:220px">التفسير</th></tr></thead>
@@ -1556,6 +1680,7 @@ function vCompare(){
       <td><div class="chips">${r.flags.map(x=>`<span class="chip ${x.c}">${esc(x.l)}</span>`).join("")}</div></td>
       <td>${r.flags.length||S.notes[nk(r)]?`<textarea class="ex" data-note="${esc(nk(r))}" id="ex-${esc(nk(r))}" placeholder="سبب التغير والمستند المؤيد">${esc(S.notes[nk(r)]||"")}</textarea>`:""}</td>
     </tr>`).join("")}
+    ${filtered ? `<tr class="tot"><td></td><td>إجمالي المعروض (${rows.length} حساب)</td><td class="n">${fmt(fsum.p)}</td><td class="n">${fmt(fsum.c)}</td><td class="n">${fmt(fsum.c-fsum.p)}</td><td></td><td></td><td></td></tr>` : ""}
     <tr class="tot"><td></td><td>إجمالي الميزان (يجب أن يساوي صفر)</td><td class="n">${fmt(sums.prior)}</td><td class="n">${fmt(sums.current)}</td><td class="n">${fmt(sums.current-sums.prior)}</td><td></td><td></td><td></td></tr>
     </tbody></table></div>
   ${rows.length>shown.length?`<p class="muted small">يظهر أول ${shown.length} حساب من ${rows.length}. استخدم البحث أو "التنبيهات فقط".</p>`:""}`;
@@ -2001,6 +2126,8 @@ async function exportXlsx(){
 function go(v){ S.view = v; LS.set("view", v); S.ui.confirm = null; render(); window.scrollTo(0,0); }
 $("#tabs").addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b) go(b.dataset.v); });
 $("#exportBtn").onclick = exportXlsx;
+$("#scrXlsx").onclick = screenXlsx;
+$("#scrPdf").onclick = screenPdf;
 const app = $("#app");
 app.addEventListener("click", async e => {
   const t = e.target.closest("[data-go],[data-act],[data-letter],[data-rf],[data-y],[data-level],[data-mode],[data-ph],[data-fsv],[data-mlevel]");
@@ -2065,7 +2192,9 @@ app.addEventListener("click", async e => {
     S.ui.confirm = null; await save("app/fsprior", {label:A().currentLabel, oci:Math.round(F.st.oci), source:"أرقام "+A().currentLabel+" بعد التسويات", v, at:new Date().toISOString()});
     toast("تم حفظ أرقام المقارنة. غيّر سنوات المقارنة من الإعدادات."); render();
   }
+  else if (act==="cmpclear"){ S.ui.cmp = {gl:"", type:"", cls:"", min:"", note:""}; S.ui.q = ""; S.ui.flagged = false; render(); }
   else if (act==="editprior"){ S.ui.editPrior = !S.ui.editPrior; render(); }
+  else if (act==="priortb"){ S.fs.prior = null; fsCache = null; await del("app/fsprior"); toast("أرقام المقارنة بقت من ميزان "+A().priorLabel); render(); }
   else if (act==="mapedit"){ S.ui.mapEdit = id; render(); }
   else if (act==="coatb"){ await coaFromTB(); toast("الدليل فيه "+S.coa.rows.size+" حساب. راجع المقترح وأكده."); render(); }
   else if (act==="coaapply"){ const src = S.ui.coaSrc; S.ui.coaSrc = null; await coaFromRows(src.leaves, src.fname); toast("تم حفظ الدليل: "+S.coa.rows.size+" حساب"); render(); }
@@ -2161,7 +2290,7 @@ app.addEventListener("change", async e => {
   if (t.id==="adj-type"){ S.ui.adj.type = t.value; return; }
   if (t.dataset.adjl!=null){ S.ui.adj.lines[+t.dataset.adjl][t.dataset.f] = t.value; render(); return; }
   if (t.dataset.prior){
-    const cur = S.fs.prior || DRAFT_PRIOR, v = {...cur.v}, id = t.dataset.prior, x = +t.value||0;
+    const cur = fsCompute().prior, v = {...cur.v}, id = t.dataset.prior, x = +t.value||0;
     v[id] = assetSec(lineOf(FS_SUB[id].line).sec) ? x : -x;
     const o = {label:cur.label||A().priorLabel, oci:cur.oci||0, source:(cur.source||"")+(/معدلة/.test(cur.source||"")?"":" (معدلة يدويًا)"), v};
     S.fs.prior = o; await save("app/fsprior", o); softRender(); return;
@@ -2174,6 +2303,7 @@ app.addEventListener("change", async e => {
     S.fs.policies[pid] = {id:pid, ...o}; await save("policies/"+pid, o); render(); return;
   }
   if (t.id==="onlyFlag"){ S.ui.flagged = t.checked; render(); return; }
+  if (t.dataset.cmp){ S.ui.cmp[t.dataset.cmp] = t.value; render(); return; }
   if (t.id==="covPct"){ S.ui.cov = Math.min(100, Math.max(1, +t.value||70)); render(); return; }
   if (t.id==="lt-body"){ saveLetterBody(t.value); return; }
   if (t.id==="lt-title"){ const lid = S.ui.letter, L = letterList().find(l=>l.id===lid); const o = {title:t.value||L.title, group:L.group||"", body:L.body}; S.letters[lid] = {id:lid, ...o}; save("letters/"+lid, o); render(); return; }
@@ -2201,6 +2331,7 @@ app.addEventListener("change", async e => {
   }
 });
 app.addEventListener("input", e => {
+  if (e.target.dataset.tf){ S.ui.tf[e.target.dataset.tf] = e.target.value; applyTableFilter(e.target.dataset.tf); return; }
   if (e.target.id==="mapQ"){ S.ui.mapQ = e.target.value; const pos = e.target.selectionStart; render(); const n = $("#mapQ"); n.focus(); n.setSelectionRange(pos,pos); return; }
   if (e.target.id==="q"){ S.ui.q = e.target.value; const pos = e.target.selectionStart; render(); const n = $("#q"); n.focus(); n.setSelectionRange(pos,pos); }
 });
