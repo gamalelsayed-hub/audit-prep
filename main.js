@@ -118,3 +118,11 @@ ipcMain.handle("upd:download", async e => {
   setTimeout(() => app.quit(), 1500);
   return {file, portable:false};
 });
+
+// ---------- PDF of the current screen (uses the page's print styles) ----------
+ipcMain.handle("pdf:save", async (e, filename) => {
+  const r = await dialog.showSaveDialog(win, {defaultPath:path.join(app.getPath("documents"), filename.replace(/[\\/:*?"<>|]/g, " ")), filters:[{name:"PDF", extensions:["pdf"]}]});
+  if (r.canceled || !r.filePath) return false;
+  const data = await e.sender.printToPDF({landscape:true, printBackground:true, pageSize:"A4", margins:{marginType:"default"}});
+  fs.writeFileSync(r.filePath, data); shell.showItemInFolder(r.filePath); return true;
+});

@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("aprepNative", {
   getDir:() => ipcRenderer.invoke("dir:get"),
   openDir:() => ipcRenderer.invoke("dir:open"),
   chooseDir:() => ipcRenderer.invoke("dir:choose"),
+  savePdf:filename => ipcRenderer.invoke("pdf:save", filename),
   checkUpdate:() => ipcRenderer.invoke("upd:check"),
   downloadUpdate:() => ipcRenderer.invoke("upd:download"),
   onUpdateProgress:f => { ipcRenderer.removeAllListeners("upd:progress"); ipcRenderer.on("upd:progress", (e, pct) => f(pct)); },
