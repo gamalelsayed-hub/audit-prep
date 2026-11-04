@@ -73,3 +73,48 @@ ipcMain.handle("dir:choose", async () => {
   }
   const c = readConfig(); c.dataDir = to; writeConfig(c); openStore(); return true;
 });
+
+// ---------- updates: compare with the latest GitHub release, download it, and start the installer ----------
+const REPO = "gamalelsayed-hub/audit-prep";
+const isPortable = () => !!process.env.PORTABLE_EXECUTABLE_DIR;
+const newer = (a, b) => { const x = String(a).split(".").map(Number), y = String(b).split(".").map(Number);
+  for (let i = 0; i < 3; i++){ if ((x[i]||0) !== (y[i]||0)) return (x[i]||0) > (y[i]||0); } return false; };
+let lastRelease = null;
+ipcMain.handle("upd:check", async () => {
+  const current = app.getVersion();
+  const res = await net.fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {headers:{"User-Agent":"AuditPrep", "Accept":"application/vnd.github+json"}});
+  if (!res.ok) throw new Error("GitHub " + res.status);
+  const r = await res.json(), latest = String(r.tag_name || "").replace(/^v/, "");
+  const want = isPortable() ? /Portable/i : /Setup/i;
+  const asset = (r.assets || []).find(a => want.test(a.name) && /\.exe$/i.test(a.name));
+  lastRelease = asset ? {name:asset.name, url:asset.browser_download_url, size:asset.size} : null;
+  return {current, latest, newer:newer(latest, current) && !!asset, notes:r.body || "", published:r.published_at || "", page:r.html_url || "", portable:isPortable(), size:asset ? asset.size : 0};
+});
+ipcMain.handle("upd:download", async e => {
+  if (!lastRelease) throw new Error("check first");
+  const {name, url, size} = lastRelease;
+  const res = await net.fetch(url, {headers:{"User-Agent":"AuditPrep"}});
+  if (!res.ok || !res.body) throw new Error("download " + res.status);
+  const total = Number(res.headers.get("content-length")) || size || 0;
+  const dir = isPortable() ? process.env.PORTABLE_EXECUTABLE_DIR : path.join(app.getPath("temp"), "AuditPrep-update");
+  fs.mkdirSync(dir, {recursive:true});
+  const file = path.join(dir, name), part = file + ".part", out = fs.createWriteStream(part);
+  const reader = res.body.getReader(); let got = 0, lastPct = -1;
+  try{
+    for (;;){
+      const {done, value} = await reader.read(); if (done) break;
+      got += value.length;
+      if (!out.write(Buffer.from(value))) await new Promise(r => out.once("drain", r));
+      const pct = total ? Math.floor(got * 100 / total) : 0;
+      if (pct !== lastPct){ lastPct = pct; e.sender.send("upd:progress", pct); }
+    }
+    await new Promise((ok, bad) => out.end(err => err ? bad(err) : ok()));
+  }catch(err){ out.destroy(); try{ fs.unlinkSync(part); }catch(_){} throw err; }
+  fs.renameSync(part, file);
+  if (isPortable()){ shell.showItemInFolder(file); return {file, portable:true}; }
+  // the installer replaces this version; data in the data folder is untouched
+  const err = await shell.openPath(file);
+  if (err) throw new Error(err);
+  setTimeout(() => app.quit(), 1500);
+  return {file, portable:false};
+});

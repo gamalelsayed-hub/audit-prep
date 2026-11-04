@@ -40,5 +40,5 @@
   };
   const caps = {db, assets, downloads};
   window.claude = {use:async n => { if (caps[n]) return caps[n]; throw new Error("unavailable"); },
-    local:{getDir:N.getDir, openDir:N.openDir, chooseDir:N.chooseDir}};
+    local:{getDir:N.getDir, openDir:N.openDir, chooseDir:N.chooseDir, checkUpdate:N.checkUpdate, downloadUpdate:N.downloadUpdate, onUpdateProgress:N.onUpdateProgress}};
 })();

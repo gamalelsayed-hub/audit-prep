@@ -355,7 +355,7 @@ async function initCaps(){
   const use = n => (window.claude && window.claude.use) ? window.claude.use(n).catch(()=>null) : Promise.resolve(null);
   const [db, assets, downloads] = await Promise.all([use("db"), use("assets"), use("downloads")]);
   S.db = db; S.assets = assets; S.downloads = downloads; S.capsReady = true;
-  if (window.claude && window.claude.local){ S.local = window.claude.local; try{ S.local.dir = await S.local.getDir(); }catch(_){} }
+  if (window.claude && window.claude.local){ S.local = window.claude.local; try{ S.local.dir = await S.local.getDir(); }catch(_){} if (S.local.checkUpdate) checkUpdate(true); }
   $("#exportBtn").hidden = !downloads || typeof XLSX==="undefined";
   if (!db){
     S.settings = Object.assign(S.settings, LS.get("settings", {}));
@@ -1612,6 +1612,7 @@ function vSettings(){
   const inp = (sec, k, lbl, w) => `<label class="f">${lbl}<input type="text" data-set="${sec}.${k}" id="s-${sec}-${k}" value="${esc(S.settings[sec][k])}" ${w?`style="min-width:${w}px"`:""}></label>`;
   return `
   <h2>الإعدادات</h2>
+  ${S.local && S.local.checkUpdate ? updPanel() : ""}
   <div class="panel"><h3>بيانات الشركة والمراجع (تظهر في الخطابات)</h3><div class="row">
     ${inp("company","name","اسم الشركة",260)}${inp("company","cr","رقم السجل التجاري")}${inp("company","vat","الرقم الضريبي")}${inp("company","address","العنوان",260)}
     ${inp("company","auditor","مكتب المراجعة",260)}${inp("company","auditorAddress","عنوان المراجع",260)}${inp("company","auditorEmail","بريد المراجع")}
@@ -1785,6 +1786,38 @@ async function wipe(what){
     if (!S.db){ LS.set("settings", S.settings); LS.set("notes", {}); }
   }
   fsCache = null;
+}
+
+// ---------- updates (desktop version only) ----------
+function updPanel(){
+  const u = S.upd || {state:"idle"}, i = u.info;
+  let body;
+  if (u.state==="checking") body = `<p class="muted">جاري الفحص…</p>`;
+  else if (u.state==="error") body = `<p class="muted">ما قدرتش أوصل لصفحة الإصدارات. اتأكد إن النت شغال وجرب تاني.</p>`;
+  else if (u.state==="downloading") body = `<p>جاري التنزيل… <b id="updPct">${u.pct||0}%</b></p><p class="muted small">ما تقفلش البرنامج لحد ما التنزيل يخلص.</p>`;
+  else if (u.state==="done") body = i && i.portable ? `<p>اتنزلت النسخة الجديدة جنب النسخة الحالية، والفولدر اتفتح. اقفل البرنامج وشغّل الملف الجديد. بياناتك زي ما هي.</p>` : `<p>اتنزل ملف التثبيت وهيفتح دلوقتي، والبرنامج هيقفل. كمّل خطوات التثبيت وافتح البرنامج تاني. بياناتك زي ما هي.</p>`;
+  else if (i && i.newer) body = `<p>فيه إصدار جديد <b>${esc(i.latest)}</b> (إنت على ${esc(i.current)}).</p>
+    ${i.notes ? `<div class="muted small" style="white-space:pre-wrap;line-height:1.8;margin:6px 0">${esc(i.notes)}</div>` : ""}
+    <div class="row"><button class="btn primary" data-act="upddl">تنزيل وتثبيت التحديث${i.size?` (${fsize(i.size)})`:""}</button></div>`;
+  else if (i) body = `<p>عندك آخر إصدار (${esc(i.current)}).</p>`;
+  else body = `<p class="muted">اضغط فحص عشان تشوف لو فيه إصدار أحدث.</p>`;
+  return `<div class="panel" id="updPanel"><div class="row between"><h3>التحديثات</h3>${u.state==="checking"||u.state==="downloading" ? "" : `<button class="btn" data-act="updcheck">فحص التحديثات</button>`}</div>
+    ${body}<p class="muted small">التحديث بيغيّر البرنامج بس، والبيانات والمرفقات اللي في فولدر الحفظ ما بتتأثرش. ومع ذلك خد نسخة احتياطية قبل التحديث.</p></div>`;
+}
+async function checkUpdate(silent){
+  S.upd = {state:"checking", info:S.upd && S.upd.info}; if (!silent) render();
+  try{
+    const info = await S.local.checkUpdate(); S.upd = {state:"idle", info};
+    if (silent && info.newer) toast("فيه إصدار جديد "+info.latest+". نزّله من الإعدادات ← التحديثات.");
+  }catch(e){ S.upd = {state: silent ? "idle" : "error"}; }
+  if (!silent || S.view==="settings") render();
+}
+async function downloadUpdate(){
+  S.upd = {...S.upd, state:"downloading", pct:0}; render();
+  S.local.onUpdateProgress(p => { S.upd.pct = p; const el = $("#updPct"); if (el) el.textContent = p+"%"; });
+  try{ await S.local.downloadUpdate(); S.upd.state = "done"; }
+  catch(e){ S.upd.state = "error"; }
+  render();
 }
 
 // ---------- full backup (moves everything between the online and desktop versions) ----------
@@ -2001,6 +2034,8 @@ app.addEventListener("click", async e => {
   }
   else if (act==="choosedir"){ const r = await S.local.chooseDir(); if (r) location.reload(); }
   else if (act==="opendir"){ S.local.openDir(); }
+  else if (act==="updcheck"){ checkUpdate(false); }
+  else if (act==="upddl"){ downloadUpdate(); }
   else if (act==="rollover"){
     const F = fsCompute(), v = {}; Object.keys(FS_SUB).forEach(k => v[k] = Math.round(F.v[k]*100)/100);
     S.ui.confirm = null; await save("app/fsprior", {label:A().currentLabel, oci:Math.round(F.st.oci), source:"أرقام "+A().currentLabel+" بعد التسويات", v, at:new Date().toISOString()});
